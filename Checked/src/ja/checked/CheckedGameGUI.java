@@ -20,9 +20,7 @@ public class CheckedGameGUI extends JFrame
 		//Dimension boardSize = new Dimension(12*spaceSize,8*spaceSize);
 		Dimension boardSize = new Dimension(1280,720);
 		boardSurface.setPreferredSize(boardSize);
-		
-		
-		
+				
 		add(boardSurface);
 		
 		setResizable(false);

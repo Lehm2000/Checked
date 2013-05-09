@@ -11,8 +11,11 @@ public class CheckedGame
 	private int playerTurn;  //whose turn is it 0 or 1;
 	private int gameState;  //0 - idle, 1 - player moving - regular move, 2 - Player moving - jumping, 3 - animating/interpolating.
 	private int prevGameState;
-	private int selectedPiece;  //used for mouse dragging.
+	
 	private int winner; //-1 no one (game ongoing), 0 player-1, 1 player-2
+	private double mouseDownPosBoardX;  //where did mouse down event occur...used for dragging pieces (in board coord space)
+	private double mouseDownPosBoardY;	//where did mouse down event occur...used for dragging pieces (in board coord space)
+	
 	
 	private long curFrameTime;
 	private long lastFrameTime;
@@ -29,8 +32,8 @@ public class CheckedGame
 	
 	public void InitGame()
 	{
-		players[0] = new CheckedPlayer(new Color(160,160,160));
-		players[1] = new CheckedPlayer(new Color(192,0,0));
+		players[0] = new CheckedPlayer(new Color(160,160,160), 0);
+		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1);
 		playerTurn = 0;
 		gameState = 0;
 		gameBoard.reset();
@@ -90,6 +93,7 @@ public class CheckedGame
 			if (playerTurn == 0)
 			{
 				winner = 1;
+				
 				return true;
 			}
 			else
@@ -103,11 +107,13 @@ public class CheckedGame
 			if (found0)
 			{
 				winner = 0;
+				
 				return true;
 			}
 			else
 			{
 				winner = 1;
+				
 				return true;
 			}
 		}		
@@ -161,142 +167,88 @@ public class CheckedGame
 		gameState = prevGameState;
 	}
 
-	public int getSelectedPiece() 
+	//updates the position of the moving piece using the provided mouse coords...
+	//somehow move to the CheckedGame class?
+	public void UpdateMovingPiecePos(double mouseBoardX, double mouseBoardY)  
 	{
-		return selectedPiece;
-	}
-
-	public void setSelectedPiece(int selectedPiece) 
-	{
-		this.selectedPiece = selectedPiece;
-	}
-	
-	//takes the piece and using its move list compares it to the board to find all places that piece can go.
-	public ArrayList<CheckedMove> AllowedMoves(CheckedGamePiece inPiece)
-	{
-		ArrayList<CheckedMove> allowedMoves = new ArrayList<CheckedMove>(); //create empty arraylist...this will be returned...this is absolute board positions the piece can move to.
-		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(inPiece.GetMoves());  //get possible moves from piece...this is relative 
-		
-		//check jumps first.
-		for (int i = 0; i < possibleMoves.size();i++)
-		{
-			allowedMoves.addAll( FindJumps(inPiece) );
-		}
-		
-		if (allowedMoves.isEmpty())
-		{
-			//then check if any regular moves work.
-			for (int i = 0; i < possibleMoves.size();i++)
-			{
-				CheckedMove curMove = possibleMoves.get(i);
-				if (IsMoveValid( inPiece,curMove ))
-				{
-					//convert from relative to absolute
-					CheckedMove newMove = new CheckedMove( curMove.getMoveX()+inPiece.GetSpaceX() , curMove.getMoveY()+inPiece.GetSpaceY() );  
-					//add the move to the list of allowed moves
-					allowedMoves.add(newMove); 
-				}			
-			}
-		}
-		
-		return allowedMoves;
-	}
-	
-	
-	public boolean IsMoveValid(CheckedGamePiece inPiece, CheckedMove inMove)
-	{
-		boolean isValid = false;
-		
-		int startX = inPiece.GetSpaceX(); 
-		int startY = inPiece.GetSpaceY();
-		int endX = startX + inMove.getMoveX();
-		int endY = startY + inMove.getMoveY();
-		
-		//is piece on the board.
-		if ( gameBoard.SpaceOnBoard(endX, endY) )
-		{
-			//next check if the space is occupied.
-			if (gameBoard.SpaceOccupied(endX, endY) == -1)
-			{
-				isValid = true;
-			}
-		}
-		
-		return isValid;		
-	}
-	
-	public ArrayList<CheckedMove> FindJumps(CheckedGamePiece gamePiece)
-	{
-		ArrayList<CheckedMove> foundMoves = new ArrayList<CheckedMove>();  //allowed jumps in board coords.
-		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(gamePiece.GetMoves());  //get possible moves from piece...this is relative 
-		
-		int piecePosX = gamePiece.GetSpaceX(); 
-		int piecePosY = gamePiece.GetSpaceY();
-		
-		for (int i = 0;i<possibleMoves.size();i++)
-		{
-			//first see that the space is occupied...and it is occupied by an opponents piece.
-			CheckedMove curMove = possibleMoves.get(i);
-			int occupied = gameBoard.SpaceOccupied(piecePosX + curMove.getMoveX(), piecePosY + curMove.getMoveY());
+		CheckedGamePiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );
 			
-			if (occupied != -1 && occupied != gamePiece.GetOwner() && gameBoard.SpaceOnBoard(piecePosX + curMove.getMoveX(), piecePosY + curMove.getMoveY())) //space is occupied and the peice belongs to the enemy.
+		double startX = movingPiece.GetX();  //where did the piece start? (what board space is it currently assigned to)
+		double startY = movingPiece.GetY();
+			
+		double mouseChangeX = mouseBoardX-mouseDownPosBoardX; //how much has the mouse changed.
+		double mouseChangeY = mouseBoardY-mouseDownPosBoardY;
+			
+		movingPiece.setCurPos(mouseChangeX+startX, mouseChangeY+startY);
+			
+	}
+	
+	public void GameMousePress(double mouseBoardX,double mouseBoardY)
+	{
+		CheckedGameBoard tempBoard = getGameBoard();
+		
+		if (GetGameState() == CheckedGameStates.IDLE)  //game currently doing nothing...waiting for player input.  //need some kind of global constant or enums for the gamestates??
+		{			
+			//see if player clicked on piece that belongs to player
+			
+			for (int i = 0;i<tempBoard.getNumGamePieces();i++)
 			{
-				//now see if the space on the other side is open
-				int occupied2 = gameBoard.SpaceOccupied(piecePosX + ( curMove.getMoveX() *2 ), piecePosY + ( curMove.getMoveY() * 2) );
-				if (occupied2 == -1 && gameBoard.SpaceOnBoard(piecePosX + ( curMove.getMoveX() *2 ),piecePosY + ( curMove.getMoveY() * 2)) )
-				{
-					//if it is we have a possible jump.
+				CheckedGamePiece curPiece = tempBoard.getPiece(i);
+				boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
+				if (isInsidePiece && CanPieceMove(curPiece))
+				{					
+					SetGameState(CheckedGameStates.MOVING);
+					curPiece.SetMoving(true);
+					gameBoard.setSelectedPiece(i);
+					mouseDownPosBoardX = mouseBoardX;  
+					mouseDownPosBoardY = mouseBoardY;
 					
-					//add it to the list
-					foundMoves.add(new CheckedMove(piecePosX + ( curMove.getMoveX() *2 ),piecePosY + ( curMove.getMoveY() * 2)) );					
-				}
-			}
+					curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());					
+				}				
+			}		
 		}
-		
-		return foundMoves;
-	}
-	
-	public boolean CanPlayerJump(int playerNum)
-	{
-		boolean canJump = false;
-		
-		int numPieces = gameBoard.getNumGamePieces();
-		
-		for (int i = 0; i<numPieces;i++)
+		else if (GetGameState() == CheckedGameStates.MULTIJUMP)
 		{
-			CheckedGamePiece curPiece = gameBoard.getPiece(i);
-			
-			if (curPiece.GetOwner() == playerNum && FindJumps(curPiece).size() != 0)
+			CheckedGamePiece curPiece = tempBoard.getPiece(gameBoard.getSelectedPiece());
+			boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
+			if (isInsidePiece && CanPieceMove(curPiece))
 			{
-				canJump = canJump || true;
-			}
+				
+				SetGameState(CheckedGameStates.MOVING);
+				curPiece.SetMoving(true);
+				//game.setSelectedPiece(i);
+				mouseDownPosBoardX = mouseBoardX;  
+				mouseDownPosBoardY = mouseBoardY;
+				
+				curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
+				
+			}		
+			
 		}
-		
-		return canJump;
 	}
 	
-	public boolean CanPieceMove(CheckedGamePiece inPiece)
+	public boolean CanPieceMove(CheckedGamePiece inPiece)  //I think this should be in GameBoard...but it uses the GameState which it doesn't have access to.
 	{
 		boolean canMove = false;
 		
-		if (GetGameState() == 0)  //if game is waiting for input
+		if (GetGameState() == CheckedGameStates.IDLE || GetGameState() == CheckedGameStates.ANIMATING)  //if game is waiting for input
 		{			
 			if (inPiece.GetOwner() == getPlayerTurn() )  //and its this pieces owner's turn.
 			{
-				if (CanPlayerJump(getPlayerTurn())) //see if any of this players pieces can jump
+				if (gameBoard.CanPlayerJump(getPlayerTurn())) //see if any of this players pieces can jump
 				{
 					//if so find if this is a piece that can jump.
-					canMove = (FindJumps(inPiece).size() != 0);
+					canMove = (gameBoard.FindJumps(inPiece).size() != 0);
 				}
 				else //player can't make a jump so if this piece has any avail moves.
 				{
-					canMove = (AllowedMoves(inPiece).size() != 0); // and if there is an allowed move then the piece can move.
+					canMove = (gameBoard.AllowedMoves(inPiece).size() != 0); // and if there is an allowed move then the piece can move.
 				}
 			}
 		}
-		else if (GetGameState() == 2)  //if doing a multi-jump
+		else if (GetGameState() ==CheckedGameStates.MULTIJUMP)  //if doing a multi-jump
 		{
-			if (inPiece == gameBoard.getPiece(selectedPiece))  //if this peice is the piece doing the multi-jump
+			if (inPiece == gameBoard.getPiece(gameBoard.getSelectedPiece() ) )  //if this peice is the piece doing the multi-jump
 			{
 				canMove = true;
 			}
@@ -304,30 +256,76 @@ public class CheckedGame
 		
 		return canMove;
 	}
-	
-	public boolean CapturePiece(int spaceX, int spaceY)
+
+	public int GameMouseRelease(double mouseBoardX,double mouseBoardY)
 	{
-		boolean success = false;
+		int resultAction = CheckedGameAction.NOTHING;
 		
-		int numPieces = gameBoard.getNumGamePieces();
-		
-		for (int i = 0; i<numPieces; i++)
-		{
-			CheckedGamePiece curPiece = gameBoard.getPiece(i);
-			if (curPiece.GetSpaceX() == spaceX && curPiece.GetSpaceY() == spaceY)
+		if (GetGameState() == CheckedGameStates.MOVING) //mouse released after dragging piece.
+		{	
+			CheckedGamePiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );  //get the piece being moved.
+			
+			//do final move based on new mouse coords (in board coords)
+			UpdateMovingPiecePos(mouseBoardX, mouseBoardY);
+			
+			//find out what square the center of the piece is over...
+			int newX = (int) (movingPiece.getCurX()+0.5);  //this should be the centerX of the piece...which when converted to int should give us the space.
+			int newY = (int) (movingPiece.getCurY()+0.5);
+			
+			//now that we have the space that the center of the piece is over...find out if it was a valid move.
+			
+			boolean validMove = false;
+			
+			//get list of allowed moves
+			
+			ArrayList<CheckedMove> allowedMoves = gameBoard.AllowedMoves(movingPiece);
+			
+			//go through list and see if one matches where player put their piece.
+			for (int i = 0; i < allowedMoves.size(); i++)
 			{
-				gameBoard.CapturePiece(i);
-				
-				//since the selected Piece is just an index of the gamepieces arraylist - must decrease it by one if the caputured peice is less than it or the index will be off.
-				if ( i < selectedPiece )
+				if (newX == (int)allowedMoves.get(i).getMoveX() && newY == (int)allowedMoves.get(i).getMoveY() )
 				{
-					selectedPiece--;
+					validMove = true;
 				}
-				break;  //no need to continue
+			}		
+			
+			if (validMove)
+			{					
+				//calc move distance...used to determine if made jump
+				int oldX = movingPiece.GetSpaceX();  //get the space the piece is currently assigned to which is where it used to be...because we haven't updated its assigned space yet.
+				int oldY = movingPiece.GetSpaceY();
+				int movedX =  newX - oldX;
+				//int movedY =  newY - oldY;	
+				
+				//movingPiece.SetPos(newX, newY); //assign the piece to its new space on the board (move the piece)
+				gameBoard.beginMovePiece(new CheckedMove(oldX,oldY,newX,newY,gameBoard.getSelectedPiece()));
+				SetGameState(CheckedGameStates.ANIMATING);
+				//king me...change piece type if at opponents 'base'.
+				
+				
+				/*if (result == 2)  //if findjumps returns some then it can jump
+				{												
+					SetGameState(CheckedGameStates.MULTIJUMP); //set mode to multi=jump
+				}
+				else if(result == 1)
+				{						
+					ChangePlayerTurn();
+					SetGameState(CheckedGameStates.IDLE); //set mode to idle
+					SetGameState(CheckedGameStates.ANIMATING);
+				}*/
+								
+								
+			}
+			else
+			{
+				//not valid move
+				//move peice back
+				SetGameState(CheckedGameStates.RETURNING);  //this will animate the piece back to where it came from
+				
 			}
 		}
 		
-		return success;  //this function should always succeed...logic error if it fails.  Because its only called when jumping and the game should only allow that if there is a piece to jump.
+		return resultAction;
 	}
 
 	

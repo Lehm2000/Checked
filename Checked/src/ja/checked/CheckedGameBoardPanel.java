@@ -29,7 +29,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 {
 	private static final long serialVersionUID = 1L;
 
-	final static boolean DEBUG = false;
+	final static boolean DEBUG = true;
 	
 	private int gameScreen = CheckedGameScreen.MAIN;  //what game screen are we on?
 	
@@ -43,9 +43,18 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	private int mousePosX;	//where is the mouse currently
 	private int mousePosY;
 	
+	private ArrayList<Cursor> cursors = new ArrayList<Cursor>();
+	
+	//define some standard colors....best place for this?
+	private Color stdBlack = new Color(0,0,0);
+	private Color stdGray = new Color(128,128,128);
+	private Color stdWhite = new Color(255,255,255);
+	private Color boardColor1 =new Color(229, 192, 136);
+	private Color boardColor2 =new Color(148, 104, 79);
+	
 	private double spaceSize = 90.0;
 	
-	private ArrayList<Cursor> cursors = new ArrayList<Cursor>();
+	
 	
 	Timer gameTimer;
 	
@@ -215,9 +224,9 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		//int xOffset = (int) (spaceSize*2);
 		
 		//draw background..currently just draw grey rect filling whole panel
-		cG.setColor(new Color(128, 128, 128));
+		cG.setColor(stdGray);
 		cG.fillRect(0,0,this.getWidth(),this.getHeight());
-		//cG.drawLine(0, 0, 64*12, 64*8);
+		cG.drawLine(0, 0, 64*12, 64*8);
 				
 		CheckedGameBoard gameBoard = game.getGameBoard();  //get current game board.
 				
@@ -226,10 +235,10 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		{
 			if (i%2 == (i/8)%2)
 			{
-				cG.setColor(new Color(229, 192, 136));
+				cG.setColor(boardColor1);
 			}
 			else
-				cG.setColor(new Color(148, 104, 79));
+				cG.setColor(boardColor2);
 					
 			cG.fillRect(ConvertCoordsBoard2PanelX(i%8), ConvertCoordsBoard2PanelY(i/8), (int)spaceSize, (int)spaceSize);
 		}
@@ -237,10 +246,10 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		//when piece being moved...highlight move locations
 		if (game.GetGameState() == CheckedGameStates.MOVING) //if gamestate dragging
 		{
-			cG.setColor(new Color(255,255,255));
+			cG.setColor(stdWhite);
 			cG.setStroke(new BasicStroke(3));
-			CheckedGamePiece selectedPiece = game.getGameBoard().getPiece(game.getSelectedPiece());
-			ArrayList<CheckedMove> highlightSpaces = game.AllowedMoves(selectedPiece);  //make duplicate of pieces possible moves...we'll probably be altering it and don't want to alter original
+			CheckedGamePiece selectedPiece = game.getGameBoard().getPiece(game.getGameBoard().getSelectedPiece());
+			ArrayList<CheckedMove> highlightSpaces = game.getGameBoard().AllowedMoves(selectedPiece);  //make duplicate of pieces possible moves...we'll probably be altering it and don't want to alter original
 					
 			for (int i = 0; i < highlightSpaces.size();i++)
 			{
@@ -251,22 +260,29 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		//draw pieces
 		for(int i = 0;i<gameBoard.getNumGamePieces();i++)  //draw all the pieces plus 1...draws the selected peice a second time...
 		{
+			
+		
 			CheckedGamePiece currentPiece;
+			int peiceNum;  //keeps track of which peice number this is since we are modifying i
+			
 			//code so that it draws the selected piece last...so that if its being moved it always shows on top.
 			if (i==gameBoard.getNumGamePieces()-1)
 			{
-				currentPiece = gameBoard.getPiece(game.getSelectedPiece());
+				currentPiece = gameBoard.getPiece(game.getGameBoard().getSelectedPiece());
+				peiceNum = game.getGameBoard().getSelectedPiece();
 			}
-			else if (i<game.getSelectedPiece())
+			else if (i<game.getGameBoard().getSelectedPiece())
 			{
 				currentPiece = gameBoard.getPiece(i);
+				peiceNum = i;
 			}
 			else
 			{
 				currentPiece = gameBoard.getPiece(i+1);
+				peiceNum = i + 1;
 			}
 					
-							
+						
 			Color playerColor = game.getPlayer(currentPiece.GetOwner()).getColor();
 					
 			//change piece color if mouseover.
@@ -275,7 +291,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				playerColor = new Color( (playerColor.getRed() + 255)/2 ,(playerColor.getGreen() + 255)/2,(playerColor.getBlue() + 255)/2);
 			}
 					
-					
+						
 			Rectangle drawArea;
 			//get coords for drawing piece.
 			if ( currentPiece.isMoving() )
@@ -291,36 +307,48 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 					
 			//shrink draw area to the circle radius...seems kind of ugly...better way?
 			drawArea.grow( (int)  ( 32.0-(currentPiece.GetRadius()*64.0) ) *-1, (int) ( 32.0-(currentPiece.GetRadius()*64.0) ) *-1);
-			cG.setColor( new Color(0,0,0) );
-					
+			
+			
+			//draw peice background
+			cG.setColor( playerColor );
+			cG.fillOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
+			
 			//set border color...based on if piece can be moved.
 			if (game.CanPieceMove(currentPiece))
 			{
-				cG.setColor( new Color(255,255,255) );
+				cG.setColor( stdWhite );
 			}
 			else
 			{
-				cG.setColor( new Color(0,0,0) );
+				cG.setColor( stdBlack );
 			}
-			cG.fillOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
-					
-			cG.setColor( playerColor );
-			drawArea.grow(-2,-2);  //magic numbers but leave since its being replace with bitmaps eventually
-			cG.fillOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
-					
-			//temp draw k for King...eventually will just be different bitmaps.
+			
+			//draw border for all pieces
+			cG.setStroke(new BasicStroke(3));
+			cG.drawOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
+			
+			//draw inner circle for king peices.
 			if (currentPiece instanceof CheckedGamePieceKing)
+			{
+				drawArea.grow(-8, -8);
+				cG.drawOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
+			}		
+				
+			//print piece numbers when debugging
+			if (DEBUG)
 			{
 				Font tempFont = cG.getFont();
 						
-				cG.setColor(new Color (0,0,0));
+				cG.setColor( stdBlack );
 				cG.setFont( new Font("Arial",Font.BOLD,24));
-				cG.drawString("K", drawArea.x+16, drawArea.y+32);
+				cG.drawString(String.format("%d", peiceNum), drawArea.x+32, drawArea.y+48);
 						
-				cG.setFont(tempFont);				
+				cG.setFont(tempFont);//restore old font.				
 			}
 			
+			
 		}
+		
 		
 	}
 	
@@ -442,7 +470,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			}
 			else if (game.GetGameState() == CheckedGameStates.MULTIJUMP)
 			{
-				CheckedGamePiece curPiece = tempBoard.getPiece(game.getSelectedPiece());
+				CheckedGamePiece curPiece = tempBoard.getPiece(game.getGameBoard().getSelectedPiece());
 				boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 				
 				if (isInsidePiece && game.CanPieceMove(curPiece))
@@ -466,26 +494,14 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				
 	}
 	
-	//updates the position of the moving piece using the provided mouse coords...
-	//somehow move to the CheckedGame class?
-	public void UpdateMovingPiecePos(int mouseX, int mouseY)  
-	{
-		CheckedGamePiece movingPiece = game.getGameBoard().getPiece( game.getSelectedPiece() );
-		
-		double startX = movingPiece.GetX();  //where did the piece start? (what board space is it currently assigned to)
-		double startY = movingPiece.GetY();
-		
-		double mouseChangeX = ConvertCoordsPanel2BoardX(mouseX)-ConvertCoordsPanel2BoardX(mouseDownPosX); //how much has the mouse changed.
-		double mouseChangeY = ConvertCoordsPanel2BoardY(mouseY)-ConvertCoordsPanel2BoardY(mouseDownPosY);
-		
-		movingPiece.setCurPos(mouseChangeX+startX, mouseChangeY+startY);
-		
-	}
 	
-	public void MouseClick(int mouseX, int mouseY)  //replaced by mousepressed...needed anymore?
+	
+	public void MouseClick(int mouseX, int mouseY)  
 	{
+		//this is for mouse clicks...currently only used for button clicking.  Piece dragging is in mousepress
+		
 		//currently doesn't care which mouse button;
-		//eventually need a play button...for now just start playing if the player clicked.
+		
 		if (gameScreen == CheckedGameScreen.MAIN)
 		{
 			//go through each button and find out if it was clicked on.
@@ -520,46 +536,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	{
 		if (gameScreen == CheckedGameScreen.GAME)
 		{		
-			CheckedGameBoard tempBoard = game.getGameBoard();
-			
-			if (game.GetGameState() == CheckedGameStates.IDLE)  //game currently doing nothing...waiting for player input.  //need some kind of global constant or enums for the gamestates??
-			{			
-				//see if player clicked on piece that belongs to player
-				
-				for (int i = 0;i<tempBoard.getNumGamePieces();i++)
-				{
-					CheckedGamePiece curPiece = tempBoard.getPiece(i);
-					boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
-					if (isInsidePiece && game.CanPieceMove(curPiece))
-					{					
-						game.SetGameState(CheckedGameStates.MOVING);
-						curPiece.SetMoving(true);
-						game.setSelectedPiece(i);
-						mouseDownPosX = mouseX;  
-						mouseDownPosY = mouseY;
-						
-						curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());					
-					}				
-				}		
-			}
-			else if (game.GetGameState() == CheckedGameStates.MULTIJUMP)
-			{
-				CheckedGamePiece curPiece = tempBoard.getPiece(game.getSelectedPiece());
-				boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
-				if (isInsidePiece && game.CanPieceMove(curPiece))
-				{
-					
-					game.SetGameState(CheckedGameStates.MOVING);
-					curPiece.SetMoving(true);
-					//game.setSelectedPiece(i);
-					mouseDownPosX = mouseX;  
-					mouseDownPosY = mouseY;
-					
-					curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
-					
-				}		
-				
-			}
+			game.GameMousePress( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 		}
 	}
 	
@@ -569,7 +546,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		{
 			if(game.GetGameState() == CheckedGameStates.MOVING)
 			{			
-				UpdateMovingPiecePos(mouseX, mouseY);
+				game.UpdateMovingPiecePos( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 			}
 		}			
 	}
@@ -578,101 +555,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	{
 		if (gameScreen == CheckedGameScreen.GAME)
 		{
-			if (game.GetGameState() == CheckedGameStates.MOVING) //mouse released after dragging piece.
-			{	
-				CheckedGamePiece movingPiece = game.getGameBoard().getPiece( game.getSelectedPiece() );  //get the piece being moved.
-				
-				//do final move based on new mouse coords
-				UpdateMovingPiecePos(mouseX, mouseY);
-				
-				//find out what square the center of the piece is over...
-				int newX = (int) (movingPiece.getCurX()+0.5);  //this should be the centerX of the piece...which when converted to int should give us the space.
-				int newY = (int) (movingPiece.getCurY()+0.5);
-				
-				//now that we have the space that the center of the piece is over...find out if it was a valid move.
-				
-				boolean validMove = false;
-				
-				//get list of allowed moves
-				
-				ArrayList<CheckedMove> allowedMoves = game.AllowedMoves(movingPiece);
-				
-				//go through list and see if one matches where player put their piece.
-				for (int i = 0; i < allowedMoves.size(); i++)
-				{
-					if (newX == (int)allowedMoves.get(i).getMoveX() && newY == (int)allowedMoves.get(i).getMoveY() )
-					{
-						validMove = true;
-					}
-				}		
-				
-				if (validMove)
-				{					
-					movingPiece.SetMoving(false); //and selected piece is not moving.
-					
-					//calc move distance...used to determine if made jump
-					int oldX = movingPiece.GetSpaceX();  //get the space the piece is currently assigned to which is where it used to be...because we haven't updated its assigned space yet.
-					int oldY = movingPiece.GetSpaceY();
-					int movedX =  newX - oldX;
-					//int movedY =  newY - oldY;	
-					
-					movingPiece.SetPos(newX, newY); //assign the piece to its new space on the board (move the piece)
-					
-					//king me...change piece type if at opponents 'base'.
-					
-					if (newY == 7  && movingPiece instanceof CheckedGamePieceManPlayer0)  
-					{
-						game.getGameBoard().KingPiece(game.getSelectedPiece());
-					}
-					
-					else if (newY == 0  && movingPiece instanceof CheckedGamePieceManPlayer1)  
-					{
-						game.getGameBoard().KingPiece(game.getSelectedPiece());
-					}
-					
-					if (Math.abs(movedX)==2)  //if it was a jump
-					{
-						//have a jump on our hands...do something about it.
-						//start by figuring out coords of space in between.
-						int jumpedX = ( (newX + oldX) /2);
-						int jumpedY = ( (newY + oldY) /2);
-						
-						//next find the piece that was at that position.
-						game.CapturePiece(jumpedX, jumpedY);
-						
-						//next figure out if this peice can jump again.
-						if (game.FindJumps(movingPiece).size()!=0)  //if findjumps returns some then it can jump
-						{												
-							game.SetGameState(CheckedGameStates.MULTIJUMP); //set mode to multi=jump
-						}
-						else  
-						{						
-							game.ChangePlayerTurn();
-							game.SetGameState(CheckedGameStates.IDLE); //set mode to idle
-						}
-					}
-					else  //if not
-					{
-						//change turns.
-						game.ChangePlayerTurn();
-						game.SetGameState(CheckedGameStates.IDLE); //set mode to idle
-					}	
-					
-					//see if this move ended the game
-					if (game.gameOver())
-					{
-						performAction(CheckedGameAction.ENDGAME);
-					}
-					
-				}
-				else
-				{
-					//not valid move
-					//restore previous state
-					game.SetGameState(CheckedGameStates.ANIMATING);
-					
-				}
-			}
+			int result = game.GameMouseRelease( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY));
+			
+			/*if (result != CheckedGameAction.NOTHING)  //mostly here to check for end game.
+			{
+				performAction(result);
+			}*/
 		}
 	}
 
@@ -721,37 +609,86 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		MouseRelease(arg0.getX(),arg0.getY());
-		//this.repaint();
-		
-		
-	}
+		//this.repaint();		
+	}	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		//this is for the timer.
+		//this is for the timer.  see if better way to handle this.
+		//seems odd to call it actionPerformed.
 		game.UpdateTime(System.nanoTime());
 		
-		if (game.GetGameState() == CheckedGameStates.ANIMATING)
+		if (game.GetGameState() == CheckedGameStates.ANIMATING || game.GetGameState() == CheckedGameStates.RETURNING)
 		{
+			
 			//do animation stuff...currently only moves the selected piece to where its supposed to be.
 			//might do other things later.
 			
 			//really rough code...needs to be refined.
 			
-			double tempMoveSpeed = 20.0;  //temporarily here.  probably should be a constant or part of the class that is being animated.
+			double tempMoveSpeed = 5.0;  //temporarily here.  probably should be a constant or part of the class that is being animated.
 			
 			double moveDist = tempMoveSpeed * ( game.GetFrameTime() / 1000000000.0 );
 			
-			CheckedGamePiece curPiece = game.getGameBoard().getPiece(game.getSelectedPiece());
+			CheckedGamePiece curPiece = game.getGameBoard().getPiece(game.getGameBoard().getSelectedPiece());
 			//curPiece.setCurX(curPiece.getCurX()+moveDist);
-			double angle = Math.atan2(curPiece.GetY()-curPiece.getCurY(), curPiece.GetX()-curPiece.getCurX());
 			
-			curPiece.setCurPos(curPiece.getCurX()+(Math.cos(angle)*moveDist), curPiece.getCurY()+(Math.sin(angle)*moveDist));
-			
-			if ( Math.pow( Math.pow(curPiece.GetX()-curPiece.getCurX(), 2) + Math.pow(curPiece.GetY()-curPiece.getCurY(), 2), 0.5) <=0.2)
+			if (Math.pow( Math.pow(curPiece.GetX()-curPiece.getCurX(), 2) + Math.pow(curPiece.GetY()-curPiece.getCurY(), 2), 0.5) < moveDist)
 			{
-				curPiece.SetMoving(false);
-				game.RestorePrevGameState();
+				//finish moving the piece
+				//System.out.println("done");
+				//curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
+				//curPiece.SetMoving(false);
+				
+				if (game.GetGameState() == CheckedGameStates.ANIMATING)
+				{
+					int result = game.getGameBoard().finishMovePiece();
+					
+					if(result == CheckedMove.MOVE || result == CheckedMove.JUMP)
+					{
+						game.ChangePlayerTurn();
+						game.SetGameState(CheckedGameStates.IDLE);
+					}
+					else if(result == CheckedMove.MULTIJUMP)
+					{
+						game.SetGameState(CheckedGameStates.MULTIJUMP); //set mode to multi=jump
+					}
+					//game.RestorePrevGameState();
+					
+					//see if this move ended the game
+					if (game.gameOver())
+					{
+						performAction(CheckedGameAction.ENDGAME);					
+						//resultAction = CheckedGameAction.ENDGAME;
+					}				
+					else
+					{
+						//if it did not end the game...get move from player if AI.
+						if ( game.getPlayer(game.getPlayerTurn()).isAI() )
+						{
+							CheckedMove aiMove = game.getPlayer(game.getPlayerTurn()).getMove( new CheckedGameBoard(game.getGameBoard()) ) ; //send copy of the gameboard to the ai...I don't think the AI needs a reference to the real one.
+							CheckedGamePiece movePiece = game.getGameBoard().getPiece(aiMove.getPiece());
+							movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
+							game.getGameBoard().beginMovePiece(aiMove); //make the move		
+							game.SetGameState(CheckedGameStates.ANIMATING);
+						}
+					}
+				}
+				else
+				{
+					//peice returning
+					curPiece.SetMoving(false);
+					game.SetGameState(CheckedGameStates.IDLE);
+				}
+			}
+			else
+			{
+				//move it the moveDist
+				//System.out.println(curPiece.GetX()+","+curPiece.getCurX()+","+curPiece.GetY()+","+curPiece.getCurY());
+				double angle = Math.atan2(curPiece.GetY()-curPiece.getCurY(), curPiece.GetX()-curPiece.getCurX());
+				
+				curPiece.setCurPos(curPiece.getCurX()+(Math.cos(angle)*moveDist), curPiece.getCurY()+(Math.sin(angle)*moveDist));			
+				
 			}
 		}
 		
