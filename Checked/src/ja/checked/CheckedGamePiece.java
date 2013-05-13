@@ -40,6 +40,41 @@ public abstract class CheckedGamePiece
 		highlighted = false;		
 	}
 	
+	// Generated hashCode and equals.
+	//==============================================================
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + owner;
+		long temp;
+		temp = Double.doubleToLongBits(x);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(y);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CheckedGamePiece other = (CheckedGamePiece) obj;
+		if (owner != other.owner)
+			return false;
+		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
+			return false;
+		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
+			return false;
+		return true;
+	}
+	
+	//==============================================================
+
 	public void GetOwner(int owner)
 	{
 		this.owner = owner;

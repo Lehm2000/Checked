@@ -8,14 +8,12 @@ public class CheckedGame
 	
 	private CheckedGameBoard gameBoard = new CheckedGameBoard();
 	private CheckedPlayer[] players = new CheckedPlayer[2];
-	private int playerTurn;  //whose turn is it 0 or 1;
+	
 	private int gameState;  //0 - idle, 1 - player moving - regular move, 2 - Player moving - jumping, 3 - animating/interpolating.
 	private int prevGameState;
 	
-	private int winner; //-1 no one (game ongoing), 0 player-1, 1 player-2
 	private double mouseDownPosBoardX;  //where did mouse down event occur...used for dragging pieces (in board coord space)
 	private double mouseDownPosBoardY;	//where did mouse down event occur...used for dragging pieces (in board coord space)
-	
 	
 	private long curFrameTime;
 	private long lastFrameTime;
@@ -34,10 +32,9 @@ public class CheckedGame
 	{
 		players[0] = new CheckedPlayer(new Color(160,160,160), 0);
 		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1);
-		playerTurn = 0;
 		gameState = 0;
 		gameBoard.reset();
-		winner = -1;
+		
 	}
 	
 	public static void PlayGame()  //might not be needed after all
@@ -56,90 +53,12 @@ public class CheckedGame
 		return curFrameTime - lastFrameTime;
 	}
 	
-	public boolean gameOver()  //return -1 if not game over.  0 if player1 won, 1 if player2.
-	{
-		boolean found0 = false;  //keeps track if we found a player0 piece
-		boolean found1 = false;	//keeps track if we found a player1 piece
-		
-		//as long as one piece from each team remains 
-		
-		for (int i = 0;i<gameBoard.getNumGamePieces();i++)
-		{
-			CheckedGamePiece curPiece = gameBoard.getPiece(i);
-			if (curPiece.GetOwner()==0)
-				found0 = true;
-			
-			if (curPiece.GetOwner()==1)
-				found1 = true;
-		}
-		
-		//return !(found0 && found1);  
-		
-		if (found0 && found1)//if found at least 1 piece from each team.
-		{
-			//if there are pieces from both players still active see if the current player can make a move
-			for (int i = 0; i< gameBoard.getNumGamePieces();i++)
-			{
-				CheckedGamePiece curPiece = gameBoard.getPiece(i);
-				if (curPiece.GetOwner() == playerTurn && CanPieceMove(curPiece))
-				{
-					return false;  //the current player can move so the game continues.
-				}				
-			}
-			//didn't find a valid move for this player...
-			//so the game must be over because none of the 
-			//current players pieces can move
-			//the other player is the winner
-			if (playerTurn == 0)
-			{
-				winner = 1;
-				
-				return true;
-			}
-			else
-			{
-				winner = 0;
-				return true;				
-			}
-		}
-		else //only found pieces for one player...game over dude.
-		{
-			if (found0)
-			{
-				winner = 0;
-				
-				return true;
-			}
-			else
-			{
-				winner = 1;
-				
-				return true;
-			}
-		}		
-	}
 	
-	public int getWinner() {
-		return winner;
-	}
 
 
 	public CheckedGameBoard getGameBoard()
 	{
 		return gameBoard;  //seems kind of dangerous to return a reference to actual game board....pass back copy?
-	}
-	
-	public int getPlayerTurn()
-	{
-		return playerTurn;
-	}
-	
-	public void ChangePlayerTurn()
-	{
-		if (playerTurn == 0)
-			playerTurn = 1;
-		else
-			playerTurn = 0;
 	}
 	
 	public CheckedPlayer getPlayer(int i)
@@ -233,9 +152,9 @@ public class CheckedGame
 		
 		if (GetGameState() == CheckedGameStates.IDLE || GetGameState() == CheckedGameStates.ANIMATING)  //if game is waiting for input
 		{			
-			if (inPiece.GetOwner() == getPlayerTurn() )  //and its this pieces owner's turn.
+			if (inPiece.GetOwner() == gameBoard.getPlayerTurn() )  //and its this pieces owner's turn.
 			{
-				if (gameBoard.CanPlayerJump(getPlayerTurn())) //see if any of this players pieces can jump
+				if (gameBoard.CanPlayerJump(gameBoard.getPlayerTurn())) //see if any of this players pieces can jump
 				{
 					//if so find if this is a piece that can jump.
 					canMove = (gameBoard.FindJumps(inPiece).size() != 0);
@@ -255,6 +174,11 @@ public class CheckedGame
 		}
 		
 		return canMove;
+	}
+	
+	public void ChangePlayerTurn()
+	{
+		gameBoard.ChangePlayerTurn();
 	}
 
 	public int GameMouseRelease(double mouseBoardX,double mouseBoardY)
@@ -326,6 +250,88 @@ public class CheckedGame
 		}
 		
 		return resultAction;
+	}
+	
+	public int UpdateGame()
+	{
+		UpdateTime(System.nanoTime());
+		
+		int result2 = CheckedGameAction.NOTHING;
+		
+		if (GetGameState() == CheckedGameStates.ANIMATING || GetGameState() == CheckedGameStates.RETURNING)
+		{
+			
+			//do animation stuff...currently only moves the selected piece to where its supposed to be.
+			//might do other things later.
+			
+			//really rough code...needs to be refined.
+			
+			double tempMoveSpeed = 5.0;  //temporarily here.  probably should be a constant or part of the class that is being animated.
+			
+			double moveDist = tempMoveSpeed * ( GetFrameTime() / 1000000000.0 );
+			
+			CheckedGamePiece curPiece = getGameBoard().getPiece(getGameBoard().getSelectedPiece());
+			//curPiece.setCurX(curPiece.getCurX()+moveDist);
+			
+			if (Math.pow( Math.pow(curPiece.GetX()-curPiece.getCurX(), 2) + Math.pow(curPiece.GetY()-curPiece.getCurY(), 2), 0.5) < moveDist)
+			{
+				//finish moving the piece
+				//System.out.println("done");
+				//curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
+				//curPiece.SetMoving(false);
+				
+				if (GetGameState() == CheckedGameStates.ANIMATING)
+				{
+					int result = getGameBoard().finishMovePiece();
+					
+					if(result == CheckedMove.MOVE || result == CheckedMove.JUMP)
+					{
+						ChangePlayerTurn();
+						SetGameState(CheckedGameStates.IDLE);
+					}
+					else if(result == CheckedMove.MULTIJUMP)
+					{
+						SetGameState(CheckedGameStates.MULTIJUMP); //set mode to multi=jump
+					}
+					//game.RestorePrevGameState();
+					
+					//see if this move ended the game
+								
+					if(!gameBoard.gameOver())
+					{
+						//if it did not end the game...get move from player if AI.
+						if ( getPlayer(gameBoard.getPlayerTurn()).isAI() )
+						{
+							CheckedMove aiMove = getPlayer(gameBoard.getPlayerTurn()).getMove( new CheckedGameBoard(getGameBoard()) ) ; //send copy of the gameboard to the ai...I don't think the AI needs a reference to the real one.
+							CheckedGamePiece movePiece = getGameBoard().getPiece(aiMove.getPiece());
+							movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
+							getGameBoard().beginMovePiece(aiMove); //make the move		
+							SetGameState(CheckedGameStates.ANIMATING);
+						}
+					}
+					else
+					{
+						result2 = CheckedGameAction.ENDGAME;
+					}
+				}
+				else
+				{
+					//peice returning
+					curPiece.SetMoving(false);
+					SetGameState(CheckedGameStates.IDLE);
+				}
+			}
+			else
+			{
+				//move it the moveDist
+				//System.out.println(curPiece.GetX()+","+curPiece.getCurX()+","+curPiece.GetY()+","+curPiece.getCurY());
+				double angle = Math.atan2(curPiece.GetY()-curPiece.getCurY(), curPiece.GetX()-curPiece.getCurX());
+				
+				curPiece.setCurPos(curPiece.getCurX()+(Math.cos(angle)*moveDist), curPiece.getCurY()+(Math.sin(angle)*moveDist));			
+				
+			}
+		}
+		return result2;
 	}
 
 	

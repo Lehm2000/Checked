@@ -51,9 +51,46 @@ public class CheckedMove {
 		this.sourceY = sourceMove.getSourceY();
 		this.moveX = sourceMove.getMoveX();
 		this.moveY = sourceMove.getMoveY();
-		this.setPiece(piece);
+		this.setPiece(sourceMove.getPiece());
 	}
 	
+	// Generated hashCode and equals.
+	//==============================================================
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + moveX;
+		result = prime * result + moveY;
+		result = prime * result + piece;
+		result = prime * result + sourceX;
+		result = prime * result + sourceY;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CheckedMove other = (CheckedMove) obj;
+		if (moveX != other.moveX)
+			return false;
+		if (moveY != other.moveY)
+			return false;
+		if (piece != other.piece)
+			return false;
+		if (sourceX != other.sourceX)
+			return false;
+		if (sourceY != other.sourceY)
+			return false;
+		return true;
+	}
+	//==============================================================
+
 	public int getSourceX() {
 		return sourceX;
 	}

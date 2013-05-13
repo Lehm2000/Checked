@@ -4,11 +4,11 @@ import java.util.ArrayList;
 
 public class CheckedGameBoard 
 {
+	private int playerTurn;  //whose turn is it 0 or 1;
 	private ArrayList<CheckedGamePiece> gamePieces= new ArrayList<CheckedGamePiece>();
 	private int selectedPiece;  //used for mouse dragging and jumping
 	CheckedMove currentMove;  //stores what the current move is during move animations
-	
-	//do we need to keep track of player turn in here for ai??
+	private int winner; //-1 no one (game ongoing), 0 player-1, 1 player-2
 	
 	//constructor.
 	public CheckedGameBoard()
@@ -21,9 +21,22 @@ public class CheckedGameBoard
 	{
 		//create an exact duplication of the provided board
 		
-		//start by making sure there are no gamePieces currently in the list
-		this.gamePieces.clear();
+		//set variables
+		this.playerTurn = sourceBoard.getPlayerTurn();
+		this.selectedPiece = sourceBoard.getSelectedPiece();
+		this.winner = sourceBoard.getWinner();
+		if (sourceBoard.currentMove == null)
+		{
+			this.currentMove = null;
+		}
+		else
+		{
+			this.currentMove = new CheckedMove(sourceBoard.currentMove);
+		}
 		
+		//make sure there are no gamePieces currently in the list
+		this.gamePieces.clear();
+		//copy all pieces from the source board to the new one
 		for (int i = 0; i< sourceBoard.getNumGamePieces();i++)
 		{
 			//make a copy of each piece
@@ -53,6 +66,92 @@ public class CheckedGameBoard
 		}
 	}
 	
+	/*@Override
+	public boolean equals(Object otherBoard)
+	{
+		//check if the object is the right type
+		if (!(otherBoard instanceof CheckedGameBoard))
+			return false;
+		//is the board itself
+		if (this == otherBoard)
+			return true;
+		
+		//check the easy stuff
+		if (this.playerTurn == ((CheckedGameBoard) otherBoard).getPlayerTurn() && 
+				this.selectedPiece == ((CheckedGameBoard) otherBoard).getSelectedPiece() &&
+				this.winner == ((CheckedGameBoard) otherBoard).getWinner() &&
+				this.currentMove == ((CheckedGameBoard) otherBoard).currentMove &&
+				this.gamePieces.size() == ((CheckedGameBoard) otherBoard).getNumGamePieces())
+		{
+			//now go through the gamePieces and compare them to the other board...if they match the two boards should be equal.
+			for (int i = 0; i< this.getNumGamePieces();i++)
+			{
+				CheckedGamePiece thisPiece = this.getPiece(i);
+				CheckedGamePiece otherPiece = ((CheckedGameBoard) otherBoard).getPiece(i);
+				if (thisPiece.GetOwner() != otherPiece.GetOwner() || thisPiece.GetSpaceX() != otherPiece.GetSpaceX() || thisPiece.GetSpaceY() != otherPiece.GetSpaceY())
+				{
+					return false;
+				}
+			}
+		}
+		//if we pass all the tests...should be equal.
+		return true;
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return 0;
+	}*/
+	// Generated hashCode and equals.
+	//==============================================================
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		//result = prime * result
+		//		+ ((currentMove == null) ? 0 : currentMove.hashCode());
+		result = prime * result
+				+ ((gamePieces == null) ? 0 : gamePieces.hashCode());
+		result = prime * result + playerTurn;
+		//result = prime * result + selectedPiece;
+		result = prime * result + winner;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CheckedGameBoard other = (CheckedGameBoard) obj;
+		/*if (currentMove == null) {
+			if (other.currentMove != null)
+				return false;
+		} else if (!currentMove.equals(other.currentMove))
+			return false;*/
+		if (gamePieces == null) 
+		{
+			if (other.gamePieces != null)
+				return false;		
+		} 
+		else if (!gamePieces.equals(other.gamePieces))
+			return false;
+		
+		if (playerTurn != other.playerTurn)
+			return false;
+		//if (selectedPiece != other.selectedPiece)
+			//return false;
+		if (winner != other.winner)
+			return false;
+		return true;
+	}
+	
+	//==============================================================
+
 	public int getSelectedPiece() 
 	{
 		return selectedPiece;
@@ -61,6 +160,19 @@ public class CheckedGameBoard
 	public void setSelectedPiece(int selectedPiece) 
 	{
 		this.selectedPiece = selectedPiece;
+	}
+	
+	public int getPlayerTurn()
+	{
+		return playerTurn;
+	}
+	
+	public void ChangePlayerTurn()
+	{
+		if (playerTurn == 0)
+			playerTurn = 1;
+		else
+			playerTurn = 0;
 	}
 
 	public void reset()
@@ -101,7 +213,11 @@ public class CheckedGameBoard
 		gamePieces.add(new CheckedGamePieceManPlayer1(1,4,7));
 		gamePieces.add(new CheckedGamePieceManPlayer1(1,6,7));
 		
-				
+		//test config
+		/*gamePieces.add(new CheckedGamePieceManPlayer0(0,3,0));
+		gamePieces.add(new CheckedGamePieceManPlayer1(1,0,1));*/
+		
+		playerTurn = 0;  //set player turn to 1.	
 	}
 	
 	
@@ -147,13 +263,88 @@ public class CheckedGameBoard
 		{
 			CheckedGamePiece curPiece = getPiece(i);
 			
-			if (curPiece.GetOwner() == playerNum && FindJumps(curPiece).size() != 0)
+			if (curPiece.GetOwner() == playerNum && CanPieceJump(curPiece))
 			{
-				canJump = canJump || true;
+				canJump = true;
+				break;
 			}
 		}
 		
 		return canJump;
+	}
+	
+	public boolean CanPlayerMove(int playerNum)
+	{
+		int numPieces = getNumGamePieces();
+		
+		for (int i = 0; i<numPieces;i++)
+		{
+			CheckedGamePiece curPiece = getPiece(i);
+			
+			if (curPiece.GetOwner() == playerNum)
+			{
+				if(AllowedMoves(curPiece).size() != 0)
+				{
+					//the play must be able to make one move.
+					return true;
+				}
+			}
+			
+		}
+		
+		return false;
+	}
+	
+	public boolean CanPieceJump(CheckedGamePiece gamePiece)  //similar to findjumps...but aborts as soon as one is found
+	{
+		ArrayList<CheckedMove> foundMoves = new ArrayList<CheckedMove>();  //allowed jumps in board coords.
+		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(gamePiece.GetMoves());  //get possible moves from piece...this is relative 
+		
+		int piecePosX = gamePiece.GetSpaceX(); 
+		int piecePosY = gamePiece.GetSpaceY();
+		
+		for (int i = 0;i<possibleMoves.size();i++)
+		{
+			//first see that the space is occupied...and it is occupied by an opponents piece.
+			CheckedMove curMove = possibleMoves.get(i);
+			int occupied = SpaceOccupied(piecePosX + curMove.getMoveX(), piecePosY + curMove.getMoveY());
+			
+			if (occupied != -1 && occupied != gamePiece.GetOwner() && SpaceOnBoard(piecePosX + curMove.getMoveX(), piecePosY + curMove.getMoveY())) //space is occupied and the peice belongs to the enemy.
+			{
+				//now see if the space on the other side is open
+				int occupied2 = SpaceOccupied(piecePosX + ( curMove.getMoveX() *2 ), piecePosY + ( curMove.getMoveY() * 2) );
+				if (occupied2 == -1 && SpaceOnBoard(piecePosX + ( curMove.getMoveX() *2 ),piecePosY + ( curMove.getMoveY() * 2)) )
+				{
+					//if it is we have a jump.
+					return true;
+					
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public boolean CanPieceMove(CheckedGamePiece inPiece)  //similar to allowed moves...except aborts as soon as it finds something...more efficient
+	{
+		ArrayList<CheckedMove> allowedMoves = new ArrayList<CheckedMove>(); //create empty arraylist...this will be returned...this is absolute board positions the piece can move to.
+		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(inPiece.GetMoves());  //get possible moves from piece...this is relative 
+			
+		//check jumps first.
+		if (CanPieceMove(inPiece))
+			return true;
+			
+		//then check if any regular moves work.
+		for (int i = 0; i < possibleMoves.size();i++)
+		{
+			CheckedMove curMove = possibleMoves.get(i);
+			if (IsMoveValid( inPiece,curMove ))
+			{
+				return true;
+			}			
+		}
+		
+		return false;
 	}
 	
 	public ArrayList<CheckedMove> FindJumps(CheckedGamePiece gamePiece)
@@ -194,10 +385,8 @@ public class CheckedGameBoard
 		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(inPiece.GetMoves());  //get possible moves from piece...this is relative 
 			
 		//check jumps first.
-		for (int i = 0; i < possibleMoves.size();i++)
-		{
-			allowedMoves.addAll( FindJumps(inPiece) );
-		}
+		allowedMoves.addAll( FindJumps(inPiece) );
+		
 			
 		if (allowedMoves.isEmpty())
 		{
@@ -248,10 +437,6 @@ public class CheckedGameBoard
 		
 		CheckedGamePiece curPiece = gamePieces.get(move.getPiece());
 		setSelectedPiece(move.getPiece());
-		
-		int oldX = curPiece.GetSpaceX();  //get the space the piece is currently assigned to which is where it used to be...because we haven't updated its assigned space yet.
-		int oldY = curPiece.GetSpaceY();
-		int movedX =  move.getMoveX() - oldX;
 		
 		//curPiece.setCurPos(oldX, oldY);
 		curPiece.SetPos(move.getMoveX(), move.getMoveY());
@@ -352,6 +537,69 @@ public class CheckedGameBoard
 		//change this peice to a King piece.
 		CheckedGamePiece currentPiece = gamePieces.get(inPiece);
 		gamePieces.set(inPiece, new CheckedGamePieceKing(currentPiece.GetOwner(), currentPiece.GetSpaceX(), currentPiece.GetSpaceY()));
+	}
+	
+	public boolean gameOver()  //return -1 if not game over.  0 if player1 won, 1 if player2.
+	{
+		boolean found0 = false;  //keeps track if we found a player0 piece
+		boolean found1 = false;	//keeps track if we found a player1 piece
+		
+		//as long as one piece from each team remains 
+		
+		for (int i = 0;i<getNumGamePieces();i++)
+		{
+			CheckedGamePiece curPiece = getPiece(i);
+			if (curPiece.GetOwner()==0)
+				found0 = true;
+			
+			if (curPiece.GetOwner()==1)
+				found1 = true;
+		}
+		
+		//return !(found0 && found1);  
+		
+		if (found0 && found1)//if found at least 1 piece from each team.
+		{
+			//if there are pieces from both players still active see if the current player can make a move
+			if(CanPlayerMove(playerTurn))
+			{
+				return false;
+			}
+			//didn't find a valid move for this player...
+			//so the game must be over because none of the 
+			//current players pieces can move
+			//the other player is the winner
+			if (playerTurn == 0)
+			{
+				winner = 1;
+				
+				return true;
+			}
+			else
+			{
+				winner = 0;
+				return true;				
+			}
+		}
+		else //only found pieces for one player...game over dude.
+		{
+			if (found0)
+			{
+				winner = 0;
+				
+				return true;
+			}
+			else
+			{
+				winner = 1;
+				
+				return true;
+			}
+		}		
+	}
+	
+	public int getWinner() {
+		return winner;
 	}
 	
 	

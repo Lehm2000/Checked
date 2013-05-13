@@ -35,6 +35,22 @@ public class CheckedGameGUI extends JFrame
 		CheckedGameGUI gameWindow = new CheckedGameGUI();
 		gameWindow.setVisible(true);
 		
+		/*CheckedGameBoard board1 = new CheckedGameBoard();
+		board1.reset();
+		CheckedGameBoard board2 = new CheckedGameBoard();
+		board2.reset();
+		CheckedGamePiece curPiece = board1.getPiece(12);
+		System.out.println("board1 hashCode: "+ board1.hashCode());
+		System.out.println("board2 hashCode: "+ board2.hashCode());
+		
+		curPiece.SetPos(800, 78);
+		
+		board2 = new CheckedGameBoard(board1);
+				
+		System.out.println(board1.equals(board2));
+		System.out.println("board1 hashCode: "+ board1.hashCode());
+		System.out.println("board2 hashCode: "+ board2.hashCode());*/
+		
 		
 		
 	}

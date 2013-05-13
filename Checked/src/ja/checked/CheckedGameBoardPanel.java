@@ -204,7 +204,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		cG.setFont(new Font("Arial",Font.BOLD,110)); //TODO create standard font
 		
-		tempString = game.getWinner() == 0 ? "Player 1 Has Won" : "Player 2 Has Won";
+		tempString = game.getGameBoard().getWinner() == 0 ? "Player 1 Has Won" : "Player 2 Has Won";
 		stringWidth = cG.getFontMetrics().stringWidth(tempString);
 		cG.drawString(tempString, 640-(stringWidth/2), 280);
 		
@@ -616,80 +616,23 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	public void actionPerformed(ActionEvent e) {
 		//this is for the timer.  see if better way to handle this.
 		//seems odd to call it actionPerformed.
-		game.UpdateTime(System.nanoTime());
 		
-		if (game.GetGameState() == CheckedGameStates.ANIMATING || game.GetGameState() == CheckedGameStates.RETURNING)
+		if (gameScreen == CheckedGameScreen.GAME)
 		{
+			int result = game.UpdateGame();
 			
-			//do animation stuff...currently only moves the selected piece to where its supposed to be.
-			//might do other things later.
-			
-			//really rough code...needs to be refined.
-			
-			double tempMoveSpeed = 5.0;  //temporarily here.  probably should be a constant or part of the class that is being animated.
-			
-			double moveDist = tempMoveSpeed * ( game.GetFrameTime() / 1000000000.0 );
-			
-			CheckedGamePiece curPiece = game.getGameBoard().getPiece(game.getGameBoard().getSelectedPiece());
-			//curPiece.setCurX(curPiece.getCurX()+moveDist);
-			
-			if (Math.pow( Math.pow(curPiece.GetX()-curPiece.getCurX(), 2) + Math.pow(curPiece.GetY()-curPiece.getCurY(), 2), 0.5) < moveDist)
+			/*if (game.getGameBoard().gameOver())
 			{
-				//finish moving the piece
-				//System.out.println("done");
-				//curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
-				//curPiece.SetMoving(false);
-				
-				if (game.GetGameState() == CheckedGameStates.ANIMATING)
-				{
-					int result = game.getGameBoard().finishMovePiece();
-					
-					if(result == CheckedMove.MOVE || result == CheckedMove.JUMP)
-					{
-						game.ChangePlayerTurn();
-						game.SetGameState(CheckedGameStates.IDLE);
-					}
-					else if(result == CheckedMove.MULTIJUMP)
-					{
-						game.SetGameState(CheckedGameStates.MULTIJUMP); //set mode to multi=jump
-					}
-					//game.RestorePrevGameState();
-					
-					//see if this move ended the game
-					if (game.gameOver())
-					{
-						performAction(CheckedGameAction.ENDGAME);					
-						//resultAction = CheckedGameAction.ENDGAME;
-					}				
-					else
-					{
-						//if it did not end the game...get move from player if AI.
-						if ( game.getPlayer(game.getPlayerTurn()).isAI() )
-						{
-							CheckedMove aiMove = game.getPlayer(game.getPlayerTurn()).getMove( new CheckedGameBoard(game.getGameBoard()) ) ; //send copy of the gameboard to the ai...I don't think the AI needs a reference to the real one.
-							CheckedGamePiece movePiece = game.getGameBoard().getPiece(aiMove.getPiece());
-							movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
-							game.getGameBoard().beginMovePiece(aiMove); //make the move		
-							game.SetGameState(CheckedGameStates.ANIMATING);
-						}
-					}
-				}
-				else
-				{
-					//peice returning
-					curPiece.SetMoving(false);
-					game.SetGameState(CheckedGameStates.IDLE);
-				}
-			}
-			else
+				performAction(CheckedGameAction.ENDGAME);					
+				//resultAction = CheckedGameAction.ENDGAME;
+			}*/
+			if (result == CheckedGameAction.ENDGAME)
 			{
-				//move it the moveDist
-				//System.out.println(curPiece.GetX()+","+curPiece.getCurX()+","+curPiece.GetY()+","+curPiece.getCurY());
-				double angle = Math.atan2(curPiece.GetY()-curPiece.getCurY(), curPiece.GetX()-curPiece.getCurX());
-				
-				curPiece.setCurPos(curPiece.getCurX()+(Math.cos(angle)*moveDist), curPiece.getCurY()+(Math.sin(angle)*moveDist));			
-				
+				performAction(CheckedGameAction.ENDGAME);
 			}
+		
+			//seems weird to check this every frame.
+			
 		}
 		
 		this.repaint();
