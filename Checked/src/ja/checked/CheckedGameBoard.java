@@ -461,15 +461,22 @@ public class CheckedGameBoard
 		int movedX =  currentMove.getMoveX() - oldX;
 		
 		//check for kinging
-		if (currentMove.getMoveY() == 7  && curPiece instanceof CheckedGamePieceManPlayer0)  
+		boolean kinged = false;
+		if (!(curPiece instanceof CheckedGamePieceKing)) //don't king more than once.
 		{
-			KingPiece(currentMove.getPiece());
-		}		
-		else if (currentMove.getMoveY() == 0  && curPiece instanceof CheckedGamePieceManPlayer1)  
-		{
-			KingPiece(currentMove.getPiece());
+			if (currentMove.getMoveY() == 7  && curPiece instanceof CheckedGamePieceManPlayer0)  
+			{
+				KingPiece(currentMove.getPiece());
+				kinged = true;
+			}		
+			else if (currentMove.getMoveY() == 0  && curPiece instanceof CheckedGamePieceManPlayer1)  
+			{
+				KingPiece(currentMove.getPiece());
+				kinged = true;
+			}
 		}
-				
+		
+		
 		if (Math.abs(movedX)==2)  //if it was a jump
 		{
 			//have a jump on our hands...do something about it.
@@ -481,7 +488,11 @@ public class CheckedGameBoard
 			CapturePiece(jumpedX, jumpedY);
 					
 			//next figure out if this peice can jump again.
-			if (FindJumps(curPiece).size()!=0)  //if findjumps returns some then it can jump
+			if (kinged)
+			{
+				result = CheckedMove.KING;
+			}
+			else if (FindJumps(curPiece).size()!=0)  //if findjumps returns some then it can jump
 			{												
 				result = CheckedMove.MULTIJUMP;  //multijump
 			}
@@ -492,8 +503,14 @@ public class CheckedGameBoard
 		}
 		else  //if not
 		{
-			//change turns.
-			result = CheckedMove.MOVE;  //regular move turn ended
+			if (kinged)
+			{
+				result = CheckedMove.KING;
+			}
+			else
+			{
+				result = CheckedMove.MOVE;  //regular move turn ended
+			}
 		}	
 		
 		return result;

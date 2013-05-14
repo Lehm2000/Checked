@@ -45,7 +45,7 @@ public class CheckedPlayer
 		AI = isAI;
 	}
 	
-	public CheckedMove getMove(CheckedGameBoard inBoard)
+	public CheckedMove getMove()
 	{
 		//human player...don't return anything.
 		return null;

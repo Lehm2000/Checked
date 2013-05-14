@@ -13,6 +13,7 @@ public class CheckedMove {
 	public final static int MOVE = 0;
 	public final static int JUMP = 1;
 	public final static int MULTIJUMP = 2;  //beginning of a multijump
+	public final static int KING = 3;
 	
 	public CheckedMove()
 	{

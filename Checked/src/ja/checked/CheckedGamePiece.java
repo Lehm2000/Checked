@@ -26,10 +26,12 @@ public abstract class CheckedGamePiece
 	
 	public CheckedGamePiece()
 	{
-		owner = 0;
-		x = 0;  //default to first space
-		y = 0;
-		highlighted = false;		
+		this.owner = 0;
+		this.x = 0;  //default to first space
+		this.y = 0;
+		this.curX = x;
+		this.curY = x;
+		this.highlighted = false;		
 	}
 	
 	public CheckedGamePiece(int owner,int x, int y)
@@ -37,7 +39,9 @@ public abstract class CheckedGamePiece
 		this.owner = owner;
 		this.x = x;
 		this.y = y;
-		highlighted = false;		
+		this.curX = x;  //need to set these so it animates correctly for ai moves...otherwise it moves from 0,0
+		this.curY = y;
+		this.highlighted = false;		
 	}
 	
 	// Generated hashCode and equals.

@@ -30,7 +30,7 @@ public class CheckedGame
 	
 	public void InitGame()
 	{
-		players[0] = new CheckedPlayer(new Color(160,160,160), 0);
+		players[0] = new CheckedPlayerHuman(new Color(160,160,160), 0);
 		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1);
 		gameState = 0;
 		gameBoard.reset();
@@ -106,43 +106,46 @@ public class CheckedGame
 	{
 		CheckedGameBoard tempBoard = getGameBoard();
 		
-		if (GetGameState() == CheckedGameStates.IDLE)  //game currently doing nothing...waiting for player input.  //need some kind of global constant or enums for the gamestates??
-		{			
-			//see if player clicked on piece that belongs to player
-			
-			for (int i = 0;i<tempBoard.getNumGamePieces();i++)
+		if (!players[tempBoard.getPlayerTurn()].isAI())//don't allow clicking if current player is ai
+		{
+			if (GetGameState() == CheckedGameStates.IDLE)  //game currently doing nothing...waiting for player input.  //need some kind of global constant or enums for the gamestates??
+			{			
+				//see if player clicked on piece that belongs to player
+				
+				for (int i = 0;i<tempBoard.getNumGamePieces();i++)
+				{
+					CheckedGamePiece curPiece = tempBoard.getPiece(i);
+					boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
+					if (isInsidePiece && CanPieceMove(curPiece))
+					{					
+						SetGameState(CheckedGameStates.MOVING);
+						curPiece.SetMoving(true);
+						gameBoard.setSelectedPiece(i);
+						mouseDownPosBoardX = mouseBoardX;  
+						mouseDownPosBoardY = mouseBoardY;
+						
+						curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());					
+					}				
+				}		
+			}
+			else if (GetGameState() == CheckedGameStates.MULTIJUMP)
 			{
-				CheckedGamePiece curPiece = tempBoard.getPiece(i);
+				CheckedGamePiece curPiece = tempBoard.getPiece(gameBoard.getSelectedPiece());
 				boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
 				if (isInsidePiece && CanPieceMove(curPiece))
-				{					
+				{
+					
 					SetGameState(CheckedGameStates.MOVING);
 					curPiece.SetMoving(true);
-					gameBoard.setSelectedPiece(i);
+					//game.setSelectedPiece(i);
 					mouseDownPosBoardX = mouseBoardX;  
 					mouseDownPosBoardY = mouseBoardY;
 					
-					curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());					
-				}				
-			}		
-		}
-		else if (GetGameState() == CheckedGameStates.MULTIJUMP)
-		{
-			CheckedGamePiece curPiece = tempBoard.getPiece(gameBoard.getSelectedPiece());
-			boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
-			if (isInsidePiece && CanPieceMove(curPiece))
-			{
+					curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
+					
+				}		
 				
-				SetGameState(CheckedGameStates.MOVING);
-				curPiece.SetMoving(true);
-				//game.setSelectedPiece(i);
-				mouseDownPosBoardX = mouseBoardX;  
-				mouseDownPosBoardY = mouseBoardY;
-				
-				curPiece.setCurPos(curPiece.GetX(), curPiece.GetY());
-				
-			}		
-			
+			}
 		}
 	}
 	
@@ -219,11 +222,20 @@ public class CheckedGame
 				int oldX = movingPiece.GetSpaceX();  //get the space the piece is currently assigned to which is where it used to be...because we haven't updated its assigned space yet.
 				int oldY = movingPiece.GetSpaceY();
 				int movedX =  newX - oldX;
-				//int movedY =  newY - oldY;	
+				//int movedY =  newY - oldY;
+				
+				//gameBoard.beginMovePiece(new CheckedMove(oldX,oldY,newX,newY,gameBoard.getSelectedPiece()));
+				//SetGameState(CheckedGameStates.ANIMATING);
+				CheckedPlayer currentPlayer = players[gameBoard.getPlayerTurn()];
+				if (currentPlayer instanceof CheckedPlayerHuman)
+				{
+					((CheckedPlayerHuman) currentPlayer).setChoosenMove(new CheckedMove(oldX,oldY,newX,newY,gameBoard.getSelectedPiece()));
+				}
+				SetGameState(CheckedGameStates.IDLE);
+				
 				
 				//movingPiece.SetPos(newX, newY); //assign the piece to its new space on the board (move the piece)
-				gameBoard.beginMovePiece(new CheckedMove(oldX,oldY,newX,newY,gameBoard.getSelectedPiece()));
-				SetGameState(CheckedGameStates.ANIMATING);
+				
 				//king me...change piece type if at opponents 'base'.
 				
 				
@@ -258,7 +270,20 @@ public class CheckedGame
 		
 		int result2 = CheckedGameAction.NOTHING;
 		
-		if (GetGameState() == CheckedGameStates.ANIMATING || GetGameState() == CheckedGameStates.RETURNING)
+		if (GetGameState() == CheckedGameStates.IDLE  || GetGameState() == CheckedGameStates.MULTIJUMP)
+		{
+			//game is currently idle.  see if a player made a move.
+			CheckedMove move = players[gameBoard.getPlayerTurn()].getMove();
+			if (move != null)
+			{
+				CheckedGamePiece movePiece = getGameBoard().getPiece(move.getPiece());
+				//movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
+				getGameBoard().beginMovePiece(move); //make the move		
+				SetGameState(CheckedGameStates.ANIMATING);
+			}
+		}
+		
+		else if (GetGameState() == CheckedGameStates.ANIMATING || GetGameState() == CheckedGameStates.RETURNING)
 		{
 			
 			//do animation stuff...currently only moves the selected piece to where its supposed to be.
@@ -284,7 +309,7 @@ public class CheckedGame
 				{
 					int result = getGameBoard().finishMovePiece();
 					
-					if(result == CheckedMove.MOVE || result == CheckedMove.JUMP)
+					if(result == CheckedMove.MOVE || result == CheckedMove.JUMP || result == CheckedMove.KING)
 					{
 						ChangePlayerTurn();
 						SetGameState(CheckedGameStates.IDLE);
@@ -302,11 +327,12 @@ public class CheckedGame
 						//if it did not end the game...get move from player if AI.
 						if ( getPlayer(gameBoard.getPlayerTurn()).isAI() )
 						{
-							CheckedMove aiMove = getPlayer(gameBoard.getPlayerTurn()).getMove( new CheckedGameBoard(getGameBoard()) ) ; //send copy of the gameboard to the ai...I don't think the AI needs a reference to the real one.
+							/*CheckedMove aiMove = getPlayer(gameBoard.getPlayerTurn()).getMove( new CheckedGameBoard(getGameBoard()) ) ; //send copy of the gameboard to the ai...I don't think the AI needs a reference to the real one.
 							CheckedGamePiece movePiece = getGameBoard().getPiece(aiMove.getPiece());
 							movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
 							getGameBoard().beginMovePiece(aiMove); //make the move		
-							SetGameState(CheckedGameStates.ANIMATING);
+							SetGameState(CheckedGameStates.ANIMATING);*/
+							((CheckedPlayerAI) getPlayer(gameBoard.getPlayerTurn())).CalcMove( new CheckedGameBoard(getGameBoard()) );
 						}
 					}
 					else

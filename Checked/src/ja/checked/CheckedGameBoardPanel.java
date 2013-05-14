@@ -131,6 +131,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			cG.drawString("Mouse Down Coords: " + (mouseDownPosX) + ", " + (mouseDownPosY), 8,64);
 			//cG.drawString("Frame Time: "+ (1000000000.0/(double)game.GetFrameTime()), 8, 80);
 			cG.drawString(String.format("FPS: %.2f", (1000000000.0/(double)game.GetFrameTime())), 8, 80);
+			cG.drawString("Player Turn: " + game.getGameBoard().getPlayerTurn(), 0, 96);
 		}
 	}
 	
@@ -314,7 +315,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			cG.fillOval(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
 			
 			//set border color...based on if piece can be moved.
-			if (game.CanPieceMove(currentPiece))
+			if (!game.getPlayer(game.getGameBoard().getPlayerTurn()).isAI() && game.CanPieceMove(currentPiece) )
 			{
 				cG.setColor( stdWhite );
 			}
@@ -450,11 +451,29 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			
 			
 			//check if over game piece
-			if (game.GetGameState() == CheckedGameStates.IDLE)
+			if (!game.getPlayer(game.getGameBoard().getPlayerTurn()).isAI())
 			{
-				for (int i = 0;i<tempBoard.getNumGamePieces();i++)
+				if (game.GetGameState() == CheckedGameStates.IDLE)
 				{
-					CheckedGamePiece curPiece = tempBoard.getPiece(i);
+					for (int i = 0;i<tempBoard.getNumGamePieces();i++)
+					{
+						CheckedGamePiece curPiece = tempBoard.getPiece(i);
+						boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
+						
+						if (isInsidePiece && game.CanPieceMove(curPiece))
+						{
+							overClickable = isInsidePiece || overClickable; //if already true don't set back to false
+							curPiece.SetHighlighted(true);
+						}
+						else
+						{
+							curPiece.SetHighlighted(false);
+						}	
+					}
+				}
+				else if (game.GetGameState() == CheckedGameStates.MULTIJUMP)
+				{
+					CheckedGamePiece curPiece = tempBoard.getPiece(game.getGameBoard().getSelectedPiece());
 					boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 					
 					if (isInsidePiece && game.CanPieceMove(curPiece))
@@ -465,24 +484,9 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 					else
 					{
 						curPiece.SetHighlighted(false);
-					}	
-				}
+					}					
+				}	
 			}
-			else if (game.GetGameState() == CheckedGameStates.MULTIJUMP)
-			{
-				CheckedGamePiece curPiece = tempBoard.getPiece(game.getGameBoard().getSelectedPiece());
-				boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
-				
-				if (isInsidePiece && game.CanPieceMove(curPiece))
-				{
-					overClickable = isInsidePiece || overClickable; //if already true don't set back to false
-					curPiece.SetHighlighted(true);
-				}
-				else
-				{
-					curPiece.SetHighlighted(false);
-				}					
-			}			
 		}
 		
 		if (overClickable )
