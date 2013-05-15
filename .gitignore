@@ -1,6 +1,7 @@
 *.zip
 *.jar
 *.vsd
-*.classpath
 .metadata/*.*
 Checked/bin/*.*
+*.png
+*.class
