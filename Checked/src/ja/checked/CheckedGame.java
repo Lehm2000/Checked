@@ -31,9 +31,16 @@ public class CheckedGame
 	public void InitGame()
 	{
 		players[0] = new CheckedPlayerHuman(new Color(160,160,160), 0);
+		//players[0] = new CheckedPlayerAI(new Color(160,160,160), 0);
 		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1);
 		gameState = 0;
 		gameBoard.reset();
+		
+		//if player 1 is an ai tell it to figure out a move.
+		if (players[0].isAI())
+		{
+			((CheckedPlayerAI)players[0]).CalcMove(new CheckedGameBoard(gameBoard));
+		}
 		
 	}
 	

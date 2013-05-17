@@ -59,7 +59,7 @@ public class CheckedPlayerAI extends CheckedPlayer{
 		private int playerNum;  //wish this didn't have to be passed an could just get it from the player class
 		
 		//constants
-		final private static int mapSize = 250000;  //initial size for the map. Very large because it needs to calculate a large number of moves.
+		final private static int mapSize = 100000;  //initial size for the map. Very large because it needs to calculate a large number of moves.
 		
 		public ChooseMoveTask()
 		{
@@ -127,6 +127,30 @@ public class CheckedPlayerAI extends CheckedPlayer{
 				if (scoreArray[i]>scoreArray[maxIndex])
 					maxIndex = i;
 			}
+			
+			//pick a move based on score weights
+			double arraySum = 0;
+			//sum the array
+			for (int i = 0; i<scoreArray.length;i++)
+			{
+				arraySum += scoreArray[i];
+			}
+			
+			Random theRnd = new Random();
+			
+			double choosenVal = theRnd.nextDouble()*arraySum;
+				
+				
+			//find what index the selection belongs to
+			double arrayTotal = 0;
+			int j;
+			for ( j = 0; j<scoreArray.length && arrayTotal < choosenVal;j++)
+			{
+				arrayTotal+=scoreArray[j];
+			}
+			
+			if (j>=scoreArray.length)  //seems kind of hacky to avoid index out of bounds
+				j = scoreArray.length-1;
 			
 			long endTime = System.nanoTime();
 			
@@ -233,6 +257,9 @@ public class CheckedPlayerAI extends CheckedPlayer{
 				calculate that king pieces are better...but it would be
 				too slow to do depth that far down.*/
 			}
+			
+			//adjust score by move depth.
+			score = score / Math.pow(10, madeMoves-1);
 			
 			//find if this board config has been scored before.
 			if (moveScores.containsKey(inBoard))

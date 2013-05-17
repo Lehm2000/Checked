@@ -1,6 +1,8 @@
 package ja.checked;
 
 import java.awt.Dimension;
+import java.util.Random;
+
 import javax.swing.JFrame;
 
 public class CheckedGameGUI extends JFrame
@@ -23,7 +25,7 @@ public class CheckedGameGUI extends JFrame
 				
 		add(boardSurface);
 		
-		setResizable(false);
+		//setResizable(false);
 		pack();
 		
 		
@@ -35,21 +37,33 @@ public class CheckedGameGUI extends JFrame
 		CheckedGameGUI gameWindow = new CheckedGameGUI();
 		gameWindow.setVisible(true);
 		
-		/*CheckedGameBoard board1 = new CheckedGameBoard();
-		board1.reset();
-		CheckedGameBoard board2 = new CheckedGameBoard();
-		board2.reset();
-		CheckedGamePiece curPiece = board1.getPiece(12);
-		System.out.println("board1 hashCode: "+ board1.hashCode());
-		System.out.println("board2 hashCode: "+ board2.hashCode());
 		
-		curPiece.SetPos(800, 78);
+		//some stuff for testing
+/*		int[] weightArray = {1,1,100,2};
 		
-		board2 = new CheckedGameBoard(board1);
-				
-		System.out.println(board1.equals(board2));
-		System.out.println("board1 hashCode: "+ board1.hashCode());
-		System.out.println("board2 hashCode: "+ board2.hashCode());*/
+		int arraySum = 0;
+		//sum the array
+		for (int i = 0; i<weightArray.length;i++)
+		{
+			arraySum += weightArray[i];
+		}
+		
+		Random theRnd = new Random();
+		
+		for (int i = 0 ; i<10; i++)
+		{
+			double choosenVal = theRnd.nextDouble()*(double)arraySum;
+			System.out.println(choosenVal);
+			
+			//find what index the selection belongs to
+			int arrayTotal = 0;
+			int j;
+			for ( j = 0; j<weightArray.length && arrayTotal < choosenVal;j++)
+			{
+				arrayTotal+=weightArray[j];
+			}
+			System.out.println(j);
+		}*/
 		
 		
 		
