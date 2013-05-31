@@ -14,6 +14,8 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -25,14 +27,16 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-public class CheckedGameBoardPanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener
+public class CheckedGameBoardPanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener, KeyListener
 
 {
 	private static final long serialVersionUID = 1L;
 
 	final static boolean DEBUG = true;
+	static boolean showDebug = false;
 	
 	private int gameScreen = CheckedGameScreen.MAIN;  //what game screen are we on?
+	private CheckedGameScreen currentScreen = null;
 	
 	private CheckedGameScreen mainScreen;
 	private CheckedGameScreen endScreen;
@@ -55,8 +59,9 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	private Dimension defaultBoardDims = new Dimension(1280,720);  //all positions are based on default screensize of 720p.  Everything gets scaled based on this
 	private Dimension currentBoardDims;
-	//private Rectangle boardCoords = new Rectangle(280,0,720,720);  //where is the board on the screen.  currently hardcoded...might want to make variable.
-	private Rectangle boardCoords = new Rectangle(330,50,620,620); 
+	private Rectangle backgroundCoords = new Rectangle(-128,-408,1536,1536);  //where is the board on the screen.  currently hardcoded...might want to make variable.
+	private Rectangle boardCoords = new Rectangle(330,50,620,620);  //where is the board on the screen.  currently hardcoded...might want to make variable.
+	//private Rectangle boardCoords = new Rectangle(0,0,1020,1020); 
 	private double scaleFactor = 1.0;
 	int offsetX = 0;
 	int offsetY = 0;
@@ -100,9 +105,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		//set the start screen
 		gameScreen = CheckedGameScreen.MAIN;
+		currentScreen = mainScreen;
 		
 		this.addMouseListener(this); 
         this.addMouseMotionListener(this);
+        this.addKeyListener(this);
+       
         
         //add a timer to control animated stuff
         gameTimer = new Timer(1, this);
@@ -154,7 +162,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		
 		//some debug stuff
-		if (DEBUG)
+		if (showDebug)
 		{
 			cG.setColor(new Color(255,255,255));
 			cG.drawString("Panel Coords: " + mousePosX + ", " + mousePosY, 8,16);
@@ -199,7 +207,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	private void drawScaledImage(Graphics2D cG,Image theImage,int x, int y, int width, int height)
 	{
-		cG.drawImage(theImage, scaleAndOffsetX(x),scaleAndOffsetY(y),(int)(width*scaleFactor),(int)(height*scaleFactor),null);
+		cG.drawImage(theImage, scaleAndOffsetX(x),scaleAndOffsetY(y),(int)Math.round(width*scaleFactor),(int)Math.round(height*scaleFactor),null);
 	}
 	
 	private void paintMainScreen(Graphics2D cG)
@@ -277,22 +285,8 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		CheckedGameBoard gameBoard = game.getGameBoard();  //get current game board.
 				
 		//draw board background
-		//draw screen background;
-		//cG.drawImage(boardBackground, ConvertCoordsBoard2PanelX(0), ConvertCoordsBoard2PanelY(0),8*(int)spaceSize, 8*(int)spaceSize, null);
-		drawScaledImage(cG,boardBackground, boardCoords.x, boardCoords.y,boardCoords.width, boardCoords.height);
-		
-		/*for (int i = 0; i< 64 ;i++)
-		{
-			if (i%2 == (i/8)%2)
-			{
-				cG.setColor(boardColor1);
-			}
-			else
-				cG.setColor(boardColor2);
-					
-			cG.fillRect(ConvertCoordsBoard2PanelX(i%8), ConvertCoordsBoard2PanelY(i/8), (int)spaceSize, (int)spaceSize);
-		}*/
-				
+		drawScaledImage(cG,boardBackground, backgroundCoords.x, backgroundCoords.y,backgroundCoords.width, backgroundCoords.height);
+						
 		//when piece being moved...highlight move locations
 		if (game.GetGameState() == CheckedGameStates.MOVING) //if gamestate dragging
 		{
@@ -318,12 +312,10 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			//get coords for drawing piece.
 			if ( currentPiece.isMoving() )
 			{
-				//drawArea = new Rectangle(xOffset + (int) (( currentPiece.getCurX() )*64.0), (int) ( currentPiece.getCurY()*64.0 ), 64, 64); //this is the size of a board sqaure.
 				drawArea = boardSpaceCoords(currentPiece.getCurX() , currentPiece.getCurY());
 			}
 			else
 			{
-				//drawArea = new Rectangle(xOffset + (int) ( (currentPiece.GetX() )*64), (int) ( currentPiece.GetY() )*64, 64, 64); //this is the size of a board sqaure.
 				drawArea = boardSpaceCoords(currentPiece.GetSpaceX() , currentPiece.GetSpaceY()); //this is the size of a board sqaure.
 			}
 			
@@ -452,13 +444,18 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			}		
 			*/	
 			//print piece numbers when debugging
-			if (false)// (DEBUG)
+			if  (showDebug)
 			{
 				Font tempFont = cG.getFont();
 						
 				cG.setColor( stdBlack );
-				cG.setFont( new Font("Arial",Font.BOLD,24));
-				cG.drawString(String.format("%d", peiceNum), drawArea.x+32, drawArea.y+48);
+				cG.setFont( new Font("Arial",Font.BOLD,scaleVal(24.0)));
+				//cG.setFont(new Font(curFont.getFontName(),curFont.getStyle(),scaleVal(curFont.getSize() ) ));
+				
+				//FontMetrics fontInfo = cG.getFontMetrics();
+				//Rectangle2D textRect = fontInfo.getStringBounds(curButton.getCaption(), null);
+				//cG.drawString(curButton.getCaption(), scaleAndOffsetX( buttonPos.x - ( (int)textRect.getWidth()/2 ) ), scaleAndOffsetY( buttonPos.y + ( (int)textRect.getHeight()/2 ) - fontInfo.getMaxDescent()));
+				cG.drawString(String.format("%d", peiceNum), scaleAndOffsetX(drawArea.x+32), scaleAndOffsetY(drawArea.y+48) );
 						
 				cG.setFont(tempFont);//restore old font.				
 			}
@@ -513,7 +510,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	Rectangle boardSpaceCoords(double x, double y)
 	{
-		double sSize = boardCoords.width / 8;
+		double sSize = boardCoords.width / 8.0;
 		
 		return new Rectangle((int) ((x*sSize)+boardCoords.x), (int) ((y*sSize)+boardCoords.y) , (int)sSize,(int)sSize);
 	}
@@ -522,25 +519,25 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	public int scaleAndOffsetX(double inValue)
 	{
-		return (int)((inValue*scaleFactor)+offsetX);
+		return (int)Math.round((inValue*scaleFactor)+offsetX);
 	}
 	
 	public int scaleAndOffsetY(double inValue)
 	{
-		return (int)((inValue*scaleFactor)+offsetY);
+		return (int)Math.round((inValue*scaleFactor)+offsetY);
 	}
 	
 	public int unscaleAndOffsetX(double inValue)
 	{
-		return (int)((inValue-offsetX)/scaleFactor);
+		return (int)Math.round((inValue-offsetX)/scaleFactor);
 	}
 	
 	public int unscaleAndOffsetY(double inValue)
 	{
-		return (int)((inValue-offsetY)/scaleFactor);
+		return (int)Math.round((inValue-offsetY)/scaleFactor);
 	}
 	
-	public void performAction(int action)
+	public void performAction(int action, int value)
 	{
 		if (action == CheckedGameAction.NOTHING)
 		{
@@ -550,10 +547,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		{
 			game.InitGame();  //reset game
 			gameScreen = CheckedGameScreen.GAME;  //change to game screen.
+			currentScreen = null; //will eventually be a screen for game as well;
 		}
 		else if (action == CheckedGameAction.ENDGAME)
 		{
 			gameScreen = CheckedGameScreen.END;
+			currentScreen = endScreen;
 		}
 		else if (action == CheckedGameAction.EXIT)
 		{
@@ -678,7 +677,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				CheckedGameButton curButton = mainScreen.getButton(i);
 				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
 				{
-					performAction(curButton.getAction());
+					performAction(curButton.getAction(),0);
 					break;  //only do one action...just in case overlapping buttons.
 				}
 			}
@@ -692,7 +691,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				CheckedGameButton curButton = endScreen.getButton(i);
 				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
 				{
-					performAction(curButton.getAction());
+					performAction(curButton.getAction(),0);
 					break;  //only do one action...just in case overlapping buttons.
 				}
 			}
@@ -801,7 +800,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			}*/
 			if (result == CheckedGameAction.ENDGAME)
 			{
-				performAction(CheckedGameAction.ENDGAME);
+				performAction(CheckedGameAction.ENDGAME,0);
 			}
 		
 			//seems weird to check this every frame.
@@ -809,6 +808,27 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		}
 		
 		this.repaint();
+		
+		
+	}
+
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		if (arg0.getKeyChar()=='d')
+		{
+			showDebug = !showDebug;
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
 		
 		
 	}

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 public class CheckedGameBoard 
 {
 	private int playerTurn;  //whose turn is it 0 or 1;
-	private ArrayList<CheckedGamePiece> gamePieces= new ArrayList<CheckedGamePiece>();
+	private ArrayList<CheckedGamePiece> gamePieces = new ArrayList<CheckedGamePiece>();
+	private ArrayList<CheckedGamePiece> capturedPieces = new ArrayList<CheckedGamePiece>();
+	
 	private int selectedPiece;  //used for mouse dragging and jumping
 	CheckedMove currentMove;  //stores what the current move is during move animations
 	private int winner; //-1 no one (game ongoing), 0 player-1, 1 player-2
@@ -36,6 +38,7 @@ public class CheckedGameBoard
 		
 		//make sure there are no gamePieces currently in the list
 		this.gamePieces.clear();
+		
 		//copy all pieces from the source board to the new one
 		for (int i = 0; i< sourceBoard.getNumGamePieces();i++)
 		{
@@ -64,45 +67,11 @@ public class CheckedGameBoard
 			//and add it to the ArrayList
 			this.gamePieces.add(copyPiece);
 		}
-	}
-	
-	/*@Override
-	public boolean equals(Object otherBoard)
-	{
-		//check if the object is the right type
-		if (!(otherBoard instanceof CheckedGameBoard))
-			return false;
-		//is the board itself
-		if (this == otherBoard)
-			return true;
 		
-		//check the easy stuff
-		if (this.playerTurn == ((CheckedGameBoard) otherBoard).getPlayerTurn() && 
-				this.selectedPiece == ((CheckedGameBoard) otherBoard).getSelectedPiece() &&
-				this.winner == ((CheckedGameBoard) otherBoard).getWinner() &&
-				this.currentMove == ((CheckedGameBoard) otherBoard).currentMove &&
-				this.gamePieces.size() == ((CheckedGameBoard) otherBoard).getNumGamePieces())
-		{
-			//now go through the gamePieces and compare them to the other board...if they match the two boards should be equal.
-			for (int i = 0; i< this.getNumGamePieces();i++)
-			{
-				CheckedGamePiece thisPiece = this.getPiece(i);
-				CheckedGamePiece otherPiece = ((CheckedGameBoard) otherBoard).getPiece(i);
-				if (thisPiece.GetOwner() != otherPiece.GetOwner() || thisPiece.GetSpaceX() != otherPiece.GetSpaceX() || thisPiece.GetSpaceY() != otherPiece.GetSpaceY())
-				{
-					return false;
-				}
-			}
-		}
-		//if we pass all the tests...should be equal.
-		return true;
+		//clear the capturedPieces too
+		capturedPieces.clear();
 	}
 	
-	@Override
-	public int hashCode()
-	{
-		return 0;
-	}*/
 	// Generated hashCode and equals.
 	//==============================================================
 	@Override
@@ -226,9 +195,19 @@ public class CheckedGameBoard
 		return gamePieces.get(spaceNum);
 	}
 	
+	public CheckedMove getCurrentMove() {
+		return currentMove;
+	}
+
 	public int getNumGamePieces()
 	{
 		return gamePieces.size();
+		
+	}
+	
+	public int getNumCapturedPieces()
+	{
+		return capturedPieces.size();
 		
 	}
 	
@@ -297,6 +276,11 @@ public class CheckedGameBoard
 	
 	public boolean CanPieceJump(CheckedGamePiece gamePiece)  //similar to findjumps...but aborts as soon as one is found
 	{
+		//TODO there is a problem with the code here.
+		//During multijumps should only return jumps for selected Piece.
+		//we have access to selected peice...but not game mode. So we 
+		//don't currently know if we are multijumping or not.  How do we let it know?
+		
 		ArrayList<CheckedMove> foundMoves = new ArrayList<CheckedMove>();  //allowed jumps in board coords.
 		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(gamePiece.GetMoves());  //get possible moves from piece...this is relative 
 		
@@ -543,10 +527,11 @@ public class CheckedGameBoard
 	
 	public void CapturePiece(int index)
 	{
+		//TODO check for index out of bounds...how to handle that?
+		capturedPieces.add(gamePieces.get(index));
 		gamePieces.remove(index);
 		
-		//return success??
-		//add piece to captured list??
+		//return success??		
 	}
 	
 	public void KingPiece(int inPiece)

@@ -8,6 +8,8 @@ import java.util.Random;
 
 public class CheckedPlayerAI extends CheckedPlayer{
 	
+	private int difficulty  = 1; 
+	
 	private Thread chooseThread;
 	private ChooseMoveTask chooseTask;
 	
@@ -16,12 +18,13 @@ public class CheckedPlayerAI extends CheckedPlayer{
 		//color = new Color(128,128,128);
 	}
 	
-	CheckedPlayerAI(Color color, int playerNum)
+	CheckedPlayerAI(Color color, int playerNum, int difficulty)
 	{
 		super(color,playerNum);
 		setAI(true);
 		chooseThread = null;
 		chooseTask = null;
+		this.difficulty = difficulty;
 	}
 	
 	/**Returns move if there is one chosen and sets the chosen move to null
@@ -115,20 +118,29 @@ public class CheckedPlayerAI extends CheckedPlayer{
 			//now we need to evaluate each move and determine which is best.
 			for (int i = 0; i<moveList.size();i++)
 			{
-				scoreArray[i] = scoreMove(new CheckedGameBoard(inBoard), moveList.get(i), 7);
+				scoreArray[i] = scoreMove(new CheckedGameBoard(inBoard), moveList.get(i), difficulty);
 			}	
 			
 			//find out which had the highest score
-			int maxIndex = 0;			
+			double maxScore = scoreArray[0];			
 			
 			for (int i = 0;i<scoreArray.length;i++)
 			{
-				//TODO make it randomly choose if there are moves with the same scores.
-				if (scoreArray[i]>scoreArray[maxIndex])
-					maxIndex = i;
+				//Find the maximum score
+				if (scoreArray[i]>maxScore)
+					maxScore = scoreArray[i];
 			}
 			
-			//pick a move based on score weights
+			//create a new list just for the moves that have the highest score...most of the time will likely only have one move in it.
+			ArrayList<CheckedMove> maxMoves = new ArrayList<CheckedMove>();
+			for (int i = 0;i<scoreArray.length;i++)
+			{
+				//Find the maximum score
+				if (scoreArray[i]==maxScore)
+					maxMoves.add(moveList.get(i));//current move equals the max score add it to the list of possibilites.
+			}
+			
+			//pick a move based on score weights...currently the result of this is not used..ends up in erratic behavior.
 			double arraySum = 0;
 			//sum the array
 			for (int i = 0; i<scoreArray.length;i++)
@@ -150,7 +162,7 @@ public class CheckedPlayerAI extends CheckedPlayer{
 			}
 			
 			if (j>=scoreArray.length)  //seems kind of hacky to avoid index out of bounds
-				j = scoreArray.length-1;
+				j = scoreArray.length - 1;
 			
 			long endTime = System.nanoTime();
 			
@@ -160,7 +172,8 @@ public class CheckedPlayerAI extends CheckedPlayer{
 			//Random rndGen = new Random();
 			//return moveList.get( (int) (rndGen.nextDouble()*moveList.size()) );
 			
-			choosenMove = moveList.get(maxIndex);
+			//choosenMove = moveList.get(maxIndex);
+			choosenMove = maxMoves.get(theRnd.nextInt(maxMoves.size()));
 			
 		}
 		
@@ -259,7 +272,7 @@ public class CheckedPlayerAI extends CheckedPlayer{
 			}
 			
 			//adjust score by move depth.
-			score = score / Math.pow(10, madeMoves-1);
+			//score = score / Math.pow(10, madeMoves-1);
 			
 			//find if this board config has been scored before.
 			if (moveScores.containsKey(inBoard))
@@ -276,10 +289,29 @@ public class CheckedPlayerAI extends CheckedPlayer{
 					//if the game is not over and we haven't reached the max moves.  we need to get the next set of moves.
 					//now we need to evaluate each move and determine which is best.
 					ArrayList<CheckedMove> moveList;
-					moveList = GetPlayerMoves(inBoard);
+					if (result == CheckedMove.MULTIJUMP)
+					{
+						//if a multi-jump only look for moves for the current piece.
+						moveList = inBoard.FindJumps(inBoard.getPiece(inBoard.getSelectedPiece()));
+						
+						//Add the piece number to the returned list
+						//TODO investigate changing FindJumps so the input is the peice number instead of
+						//a reference to the piece itself.  Would simplify some things but mean quite a bit of
+						//recoding.
+						for (int j = 0 ;j<moveList.size();j++)
+						{
+							(moveList.get(j)).setPiece(inBoard.getSelectedPiece()); //set the piece number to the current piece
+						}
+						
+					}
+					else
+					{
+						moveList = GetPlayerMoves(inBoard);
+					}
+					
 					for (int i = 0; i<moveList.size();i++)
 					{
-						score += scoreMove(new CheckedGameBoard(inBoard), moveList.get(i),maxMoves,madeMoves);
+						score += scoreMove(new CheckedGameBoard(inBoard), moveList.get(i),maxMoves,madeMoves)/(double)moveList.size();
 					}				
 				}
 				//move now evaluated...add to list of already made moves

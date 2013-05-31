@@ -6,6 +6,11 @@ import java.util.ArrayList;
 public class CheckedGame 
 {
 	
+	//constants
+	final static int ONEPLAYER = 1;
+	final static int TWOPLAYERLOCAL = 2;
+	final static int TWOPLAYERNETWORK = 3;
+	
 	private CheckedGameBoard gameBoard = new CheckedGameBoard();
 	private CheckedPlayer[] players = new CheckedPlayer[2];
 	
@@ -32,7 +37,7 @@ public class CheckedGame
 	{
 		players[0] = new CheckedPlayerHuman(new Color(160,160,160), 0);
 		//players[0] = new CheckedPlayerAI(new Color(160,160,160), 0);
-		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1);
+		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1, 3);
 		gameState = 0;
 		gameBoard.reset();
 		
