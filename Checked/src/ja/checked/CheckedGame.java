@@ -8,8 +8,8 @@ public class CheckedGame
 	
 	//constants
 	final static int ONEPLAYER = 1;
-	final static int TWOPLAYERLOCAL = 2;
-	final static int TWOPLAYERNETWORK = 3;
+	final static int TWOPLAYER_LOCAL = 2;
+	final static int TWOPLAYER_NETWORK = 3;
 	
 	private CheckedGameBoard gameBoard = new CheckedGameBoard();
 	private CheckedPlayer[] players = new CheckedPlayer[2];
@@ -29,15 +29,25 @@ public class CheckedGame
 	
 	public CheckedGame()
 	{
-		InitGame();
+		InitGame(CheckedGame.ONEPLAYER);
 		
 	}
 	
-	public void InitGame()
+	public void InitGame(int GameType)
 	{
-		players[0] = new CheckedPlayerHuman(new Color(160,160,160), 0);
-		//players[0] = new CheckedPlayerAI(new Color(160,160,160), 0);
-		players[1] = new CheckedPlayerAI(new Color(192,0,0), 1, 3);
+		
+		if (GameType == CheckedGame.ONEPLAYER)
+		{
+			players[0] = new CheckedPlayerHuman(new Color(160,160,160), 0, "Player 1");
+			//players[0] = new CheckedPlayerAI(new Color(160,160,160), 0,7);
+			players[1] = new CheckedPlayerAI(new Color(192,0,0), 1, "Player 2", 7);
+		}
+		else if (GameType == CheckedGame.TWOPLAYER_LOCAL)
+		{
+			players[0] = new CheckedPlayer(new Color(160,160,160), 0, "Player 1");
+			players[1] = new CheckedPlayer(new Color(192,0,0), 1, "Player 2");
+		}
+		
 		gameState = 0;
 		gameBoard.reset();
 		
@@ -102,7 +112,7 @@ public class CheckedGame
 	//somehow move to the CheckedGame class?
 	public void UpdateMovingPiecePos(double mouseBoardX, double mouseBoardY)  
 	{
-		CheckedGamePiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );
+		CheckedPiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );
 			
 		double startX = movingPiece.GetX();  //where did the piece start? (what board space is it currently assigned to)
 		double startY = movingPiece.GetY();
@@ -126,7 +136,7 @@ public class CheckedGame
 				
 				for (int i = 0;i<tempBoard.getNumGamePieces();i++)
 				{
-					CheckedGamePiece curPiece = tempBoard.getPiece(i);
+					CheckedPiece curPiece = tempBoard.getPiece(i);
 					boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
 					if (isInsidePiece && CanPieceMove(curPiece))
 					{					
@@ -142,7 +152,7 @@ public class CheckedGame
 			}
 			else if (GetGameState() == CheckedGameStates.MULTIJUMP)
 			{
-				CheckedGamePiece curPiece = tempBoard.getPiece(gameBoard.getSelectedPiece());
+				CheckedPiece curPiece = tempBoard.getPiece(gameBoard.getSelectedPiece());
 				boolean isInsidePiece = curPiece.PointInside( mouseBoardX, mouseBoardY );
 				if (isInsidePiece && CanPieceMove(curPiece))
 				{
@@ -161,7 +171,7 @@ public class CheckedGame
 		}
 	}
 	
-	public boolean CanPieceMove(CheckedGamePiece inPiece)  //I think this should be in GameBoard...but it uses the GameState which it doesn't have access to.
+	public boolean CanPieceMove(CheckedPiece inPiece)  //I think this should be in GameBoard...but it uses the GameState which it doesn't have access to.
 	{
 		boolean canMove = false;
 		
@@ -198,11 +208,11 @@ public class CheckedGame
 
 	public int GameMouseRelease(double mouseBoardX,double mouseBoardY)
 	{
-		int resultAction = CheckedGameAction.NOTHING;
+		int resultAction = CheckedAction.NOTHING;
 		
 		if (GetGameState() == CheckedGameStates.MOVING) //mouse released after dragging piece.
 		{	
-			CheckedGamePiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );  //get the piece being moved.
+			CheckedPiece movingPiece = getGameBoard().getPiece( gameBoard.getSelectedPiece() );  //get the piece being moved.
 			
 			//do final move based on new mouse coords (in board coords)
 			UpdateMovingPiecePos(mouseBoardX, mouseBoardY);
@@ -280,7 +290,7 @@ public class CheckedGame
 	{
 		UpdateTime(System.nanoTime());
 		
-		int result2 = CheckedGameAction.NOTHING;
+		int result2 = CheckedAction.NOTHING;
 		
 		if (GetGameState() == CheckedGameStates.IDLE  || GetGameState() == CheckedGameStates.MULTIJUMP)
 		{
@@ -288,7 +298,7 @@ public class CheckedGame
 			CheckedMove move = players[gameBoard.getPlayerTurn()].getMove();
 			if (move != null)
 			{
-				CheckedGamePiece movePiece = getGameBoard().getPiece(move.getPiece());
+				CheckedPiece movePiece = getGameBoard().getPiece(move.getPiece());
 				//movePiece.setCurPos(movePiece.GetX(), movePiece.GetY());
 				getGameBoard().beginMovePiece(move); //make the move		
 				SetGameState(CheckedGameStates.ANIMATING);
@@ -307,7 +317,7 @@ public class CheckedGame
 			
 			double moveDist = tempMoveSpeed * ( GetFrameTime() / 1000000000.0 );
 			
-			CheckedGamePiece curPiece = getGameBoard().getPiece(getGameBoard().getSelectedPiece());
+			CheckedPiece curPiece = getGameBoard().getPiece(getGameBoard().getSelectedPiece());
 			//curPiece.setCurX(curPiece.getCurX()+moveDist);
 			
 			if (Math.pow( Math.pow(curPiece.GetX()-curPiece.getCurX(), 2) + Math.pow(curPiece.GetY()-curPiece.getCurY(), 2), 0.5) < moveDist)
@@ -349,7 +359,7 @@ public class CheckedGame
 					}
 					else
 					{
-						result2 = CheckedGameAction.ENDGAME;
+						result2 = CheckedAction.ENDGAME;
 					}
 				}
 				else

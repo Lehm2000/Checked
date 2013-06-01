@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 
 
-public abstract class CheckedGamePiece 
+public abstract class CheckedPiece 
 {
 	private int owner;  					//which player owns this piece 0 or 1;
 	private double x;						//what horizontal space located 0-7. should always be whole number but was easier to make it double for calculating stuff
@@ -24,7 +24,7 @@ public abstract class CheckedGamePiece
 	
 	ArrayList<CheckedMove> moveList = new ArrayList<CheckedMove>();  //list of moves the piece can make
 	
-	public CheckedGamePiece()
+	public CheckedPiece()
 	{
 		this.owner = 0;
 		this.x = 0;  //default to first space
@@ -34,7 +34,7 @@ public abstract class CheckedGamePiece
 		this.highlighted = false;		
 	}
 	
-	public CheckedGamePiece(int owner,int x, int y)
+	public CheckedPiece(int owner,int x, int y)
 	{
 		this.owner = owner;
 		this.x = x;
@@ -67,7 +67,7 @@ public abstract class CheckedGamePiece
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CheckedGamePiece other = (CheckedGamePiece) obj;
+		CheckedPiece other = (CheckedPiece) obj;
 		if (owner != other.owner)
 			return false;
 		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))

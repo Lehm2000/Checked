@@ -18,9 +18,9 @@ public class CheckedPlayerAI extends CheckedPlayer{
 		//color = new Color(128,128,128);
 	}
 	
-	CheckedPlayerAI(Color color, int playerNum, int difficulty)
+	CheckedPlayerAI(Color color, int playerNum, String name, int difficulty)
 	{
-		super(color,playerNum);
+		super(color,playerNum, name);
 		setAI(true);
 		chooseThread = null;
 		chooseTask = null;
@@ -45,6 +45,8 @@ public class CheckedPlayerAI extends CheckedPlayer{
 		//do we need to make sure the thread is not running?
 		chooseTask = new ChooseMoveTask(inBoard, this.getPlayerNum());  //pass the board and the player num to the task.
 		chooseThread = new Thread(chooseTask);
+		chooseThread.setPriority(Thread.MIN_PRIORITY);  //makes game not completely freeze when ai thinking.
+		
 		chooseThread.start();			
 		
 	}
@@ -80,6 +82,7 @@ public class CheckedPlayerAI extends CheckedPlayer{
 			//this.moveScores  = new HashMap<CheckedGameBoard,Double>(); 
 			this.inBoard = new CheckedGameBoard(inBoard);  //make copy of board supplied.
 			this.playerNum = playerNum;
+			
 		}
 		
 		/** Method returns the move chosen and clears it so no move is now chosen.
@@ -96,6 +99,7 @@ public class CheckedPlayerAI extends CheckedPlayer{
 		public void run() {
 			
 			choosenMove = null;  //clear the choosenmove just in case.
+			
 			
 			ArrayList<CheckedMove> moveList;
 			moveList = GetPlayerMoves(inBoard);

@@ -2,17 +2,18 @@ package ja.checked;
 
 import java.util.ArrayList;
 
-public class CheckedGamePieceManPlayer1 extends CheckedGamePiece {
+public class CheckedPieceManPlayer0 extends CheckedPiece {
 
-	public CheckedGamePieceManPlayer1(int owner, int x, int y) 
+	public CheckedPieceManPlayer0(int owner, int x, int y) 
 	{
 		super(owner,x,y);
-		moveList.add(new CheckedMove(-1,-1));
-		moveList.add(new CheckedMove(1,-1));
+		moveList.add(new CheckedMove(-1,1));
+		moveList.add(new CheckedMove(1,1));
 	}
 
-	public CheckedGamePieceManPlayer1(CheckedGamePiece sourcePiece) 
-	{
+	//copy constructor
+	public CheckedPieceManPlayer0(CheckedPiece sourcePiece) {
+		
 		super(sourcePiece.GetOwner(),sourcePiece.GetSpaceX(),sourcePiece.GetSpaceY());
 		
 		ArrayList<CheckedMove> copyMoveList = sourcePiece.GetMoves();
@@ -22,6 +23,6 @@ public class CheckedGamePieceManPlayer1 extends CheckedGamePiece {
 		{
 			moveList.add(new CheckedMove( copyMoveList.get(i) ) );
 		}
-	}
+	}	
 
 }

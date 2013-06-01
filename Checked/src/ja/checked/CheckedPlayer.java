@@ -14,6 +14,7 @@ public class CheckedPlayer
 	private Color color;	//what color are the players pieces?
 	private int playerNum;
 	private boolean AI;		//is the player a computer opponent.
+	String name;
 	
 	
 	public CheckedPlayer()
@@ -21,13 +22,15 @@ public class CheckedPlayer
 		color = new Color(128,128,128);
 		this.setPlayerNum(-1);
 		this.setAI(false);
+		this.setName("Player 0");
 	}
 	
-	public CheckedPlayer(Color color,int playerNum)
+	public CheckedPlayer(Color color,int playerNum, String name)
 	{
 		this.color = color;
 		this.setPlayerNum(playerNum);
 		this.setAI(false);
+		this.setName(name);
 	}
 	
 	public Color getColor()
@@ -57,6 +60,14 @@ public class CheckedPlayer
 
 	public void setPlayerNum(int playerNum) {
 		this.playerNum = playerNum;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

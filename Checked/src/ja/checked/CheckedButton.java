@@ -4,7 +4,7 @@ import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-public class CheckedGameButton 
+public class CheckedButton 
 {	
 	private int width;
 	private int height;
@@ -13,7 +13,7 @@ public class CheckedGameButton
 	private Font font;
 	private int action;  //set to a member of CheckedGameAction
 	
-	CheckedGameButton()
+	CheckedButton()
 	{
 		width = 100;
 		height = 20;
@@ -21,10 +21,10 @@ public class CheckedGameButton
 		position.y = 0;
 		caption = "nothing";
 		font = new Font("Arial",Font.PLAIN,12);
-		action = CheckedGameAction.NOTHING;
+		action = CheckedAction.NOTHING;
 	}
 	
-	CheckedGameButton(int width, int height, Point position, String caption, Font font,int action)
+	CheckedButton(int width, int height, Point position, String caption, Font font,int action)
 	{
 		this.width = width;
 		this.height = height;

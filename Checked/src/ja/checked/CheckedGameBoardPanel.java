@@ -35,11 +35,14 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	final static boolean DEBUG = true;
 	static boolean showDebug = false;
 	
-	private int gameScreen = CheckedGameScreen.MAIN;  //what game screen are we on?
-	private CheckedGameScreen currentScreen = null;
+	private int currentScreen = CheckedScreen.MAIN;  //what game screen are we on?
+	//private CheckedGameScreen currentScreen = null;
 	
-	private CheckedGameScreen mainScreen;
-	private CheckedGameScreen endScreen;
+	//private CheckedGameScreen mainScreen;
+	//private CheckedGameScreen endScreen;
+	
+	private CheckedScreen[] gameScreens = new CheckedScreen[3];  //currently three screens  TODO is this best place to store the game screens?
+	
 	
 	private CheckedGame game = new CheckedGame();  //instantiate game class.  correct place?
 	
@@ -87,26 +90,23 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		cursors.add(new Cursor(Cursor.DEFAULT_CURSOR));
 		
 		//setup the main screen
-		mainScreen = new CheckedGameScreen();
-		mainScreen.addButton(new CheckedGameButton(400, 50, new Point(640,640), "Play Game", new Font("Arial",Font.BOLD,36),CheckedGameAction.PLAYGAME));
+		gameScreens[CheckedScreen.MAIN] = new CheckedScreen();
+		gameScreens[CheckedScreen.MAIN].addButton(new CheckedButton(400, 50, new Point(640,640), "Play Game", new Font("Arial",Font.BOLD,36),CheckedAction.PLAYGAME_SINGLE));
 		
-		mainScreen.background = loadImage("checkedMainScreen.png");
+		gameScreens[CheckedScreen.MAIN].background = loadImage("checkedMainScreen.png");
+		
+		//setup game screen here...for GUI buttons and such
 		
 		//setup the end screen
-		endScreen = new CheckedGameScreen();
-		endScreen.addButton(new CheckedGameButton(400, 50, new Point(640,620), "Play Again", new Font("Arial",Font.BOLD,36),CheckedGameAction.PLAYGAME));
-		endScreen.addButton(new CheckedGameButton(400, 50, new Point(640,680), "Exit", new Font("Arial",Font.BOLD,36),CheckedGameAction.EXIT));
+		gameScreens[CheckedScreen.END] = new CheckedScreen();
+		gameScreens[CheckedScreen.END].addButton(new CheckedButton(400, 50, new Point(640,620), "Play Again", new Font("Arial",Font.BOLD,36),CheckedAction.PLAYGAME_SINGLE));
+		gameScreens[CheckedScreen.END].addButton(new CheckedButton(400, 50, new Point(640,680), "Exit", new Font("Arial",Font.BOLD,36),CheckedAction.EXIT));
 		
-		//url = getClass().getResource("checkedMainScreen.png");
-		//tempImage = new ImageIcon(url).getImage();  
-		//endScreen.background = tempImage;
-		
-		endScreen.background = loadImage("checkedMainScreen.png");
+		gameScreens[CheckedScreen.END].background = loadImage("checkedMainScreen.png");
 		
 		//set the start screen
-		gameScreen = CheckedGameScreen.MAIN;
-		currentScreen = mainScreen;
-		
+		currentScreen = CheckedScreen.MAIN;
+				
 		this.addMouseListener(this); 
         this.addMouseMotionListener(this);
         this.addKeyListener(this);
@@ -147,18 +147,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		cG.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);  //turn on antialiasing
 		cG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		
-		if (gameScreen == CheckedGameScreen.MAIN)
+		if (currentScreen == CheckedScreen.GAME)
 		{
-			paintMainScreen(cG);
+			paintGameBoard(cG);  
 		}
-		else if (gameScreen == CheckedGameScreen.GAME)
-		{
-			paintGameScreen(cG);
-		}
-		else if (gameScreen == CheckedGameScreen.END)
-		{
-			paintEndScreen(cG);
-		}
+		
+		paintGUIScreen(cG,currentScreen);
 		
 		
 		//some debug stuff
@@ -177,7 +171,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		}
 	}
 	
-	private void drawButton(Graphics2D cG, CheckedGameButton curButton)
+	private void drawButton(Graphics2D cG, CheckedButton curButton)
 	{
 		//set the button color...currently hardcoded..maybe have color as a button member
 		cG.setColor(new Color(255,255,255));
@@ -198,7 +192,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		//
 		FontMetrics fontInfo = cG.getFontMetrics();
 		Rectangle2D textRect = fontInfo.getStringBounds(curButton.getCaption(), null);
-		cG.drawString(curButton.getCaption(), scaleAndOffsetX( buttonPos.x - ( (int)textRect.getWidth()/2 ) ), scaleAndOffsetY( buttonPos.y + ( (int)textRect.getHeight()/2 ) - fontInfo.getMaxDescent()));
+		cG.drawString(curButton.getCaption(), scaleAndOffsetX( buttonPos.x) - ( (int)textRect.getWidth()/2 ) , scaleAndOffsetY( buttonPos.y) + ( (int)textRect.getHeight()/2 ) - fontInfo.getMaxDescent());
 		//cG.getFontMetrics().stringWidth(curButton.getCaption());
 		
 		//restore font.
@@ -210,25 +204,25 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		cG.drawImage(theImage, scaleAndOffsetX(x),scaleAndOffsetY(y),(int)Math.round(width*scaleFactor),(int)Math.round(height*scaleFactor),null);
 	}
 	
-	private void paintMainScreen(Graphics2D cG)
+	private void paintGUIScreen(Graphics2D cG,int screenNum)
 	{
-		cG.setColor(new Color(255, 255, 255));
-		cG.fillRect(0,0,this.getWidth(),this.getHeight());
 		
-		
-		
-		//draw screen background;
-		//cG.drawImage(mainScreen.background, offsetX, offsetY,(int)(1280*scaleFactor),(int)(720*scaleFactor),null);
-		drawScaledImage(cG, mainScreen.background, 0, 0,1280,720);
-		
-		
-		
-		//draw buttons
-		for (int i = 0; i<mainScreen.numButtons();i++)
+		if (gameScreens[screenNum]!=null)
 		{
-			CheckedGameButton curButton = mainScreen.getButton(i);
+			cG.setColor(new Color(255, 255, 255));
+			cG.fillRect(0,0,this.getWidth(),this.getHeight());
+						
+			//draw screen background;
+			//cG.drawImage(mainScreen.background, offsetX, offsetY,(int)(1280*scaleFactor),(int)(720*scaleFactor),null);
+			drawScaledImage(cG, gameScreens[screenNum].background, 0, 0,1280,720);
 			
-			drawButton(cG,curButton);			
+			//draw buttons
+			for (int i = 0; i<gameScreens[screenNum].numButtons();i++)
+			{
+				CheckedButton curButton = gameScreens[screenNum].getButton(i);
+				
+				drawButton(cG,curButton);			
+			}
 		}
 		
 			
@@ -240,7 +234,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		Font tempFont = cG.getFont();
 				
 		//draw screen background;
-		cG.drawImage(endScreen.background, 0, 0,null);
+		cG.drawImage(gameScreens[CheckedScreen.END].background, 0, 0,null);
 		
 		cG.setColor(new Color(0,0,0,128));
 		cG.fillRect(0, 0,1280, 720);
@@ -262,9 +256,9 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		cG.drawString(tempString, 640-(stringWidth/2), 280);
 		
 		//draw buttons
-		for (int i = 0; i<endScreen.numButtons();i++)
+		for (int i = 0; i<gameScreens[CheckedScreen.END].numButtons();i++)
 		{
-			CheckedGameButton curButton = endScreen.getButton(i);
+			CheckedButton curButton = gameScreens[CheckedScreen.END].getButton(i);
 					
 			drawButton(cG,curButton);			
 		}
@@ -272,7 +266,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		cG.setFont(tempFont);
 	}
 	
-	private void paintGameScreen (Graphics2D cG)
+	private void paintGameBoard(Graphics2D cG)
 	{
 		
 		//int xOffset = (int) (spaceSize*2);
@@ -292,7 +286,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		{
 			cG.setColor(stdWhite);
 			cG.setStroke(new BasicStroke(3));
-			CheckedGamePiece selectedPiece = game.getGameBoard().getPiece(game.getGameBoard().getSelectedPiece());
+			CheckedPiece selectedPiece = game.getGameBoard().getPiece(game.getGameBoard().getSelectedPiece());
 			ArrayList<CheckedMove> highlightSpaces = game.getGameBoard().AllowedMoves(selectedPiece);  //make duplicate of pieces possible moves...we'll probably be altering it and don't want to alter original
 					
 			for (int i = 0; i < highlightSpaces.size();i++)
@@ -306,7 +300,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		for (int i = 0;i<gameBoard.getNumGamePieces();i++)
 		{
-			CheckedGamePiece currentPiece = gameBoard.getPiece(i);
+			CheckedPiece currentPiece = gameBoard.getPiece(i);
 			
 			Rectangle drawArea;
 			//get coords for drawing piece.
@@ -329,7 +323,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		{
 			
 		
-			CheckedGamePiece currentPiece;
+			CheckedPiece currentPiece;
 			int peiceNum;  //keeps track of which peice number this is since we are modifying i
 			
 			//code so that it draws the selected piece last...so that if its being moved it always shows on top.
@@ -383,7 +377,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			//draw actual piece
 			if (game.getPlayer(currentPiece.GetOwner()).getPlayerNum() == 0)
 			{
-				if (currentPiece instanceof CheckedGamePieceKing)
+				if (currentPiece instanceof CheckedPieceKing)
 				{
 				
 					//cG.drawImage(gfxPlayer0[1], drawArea.x, drawArea.y,(int)spaceSize, (int)spaceSize, null);
@@ -397,7 +391,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 			}
 			else 
 			{
-				if (currentPiece instanceof CheckedGamePieceKing)
+				if (currentPiece instanceof CheckedPieceKing)
 				{
 				
 					//cG.drawImage(gfxPlayer1[1], drawArea.x, drawArea.y,(int)spaceSize, (int)spaceSize, null);
@@ -539,22 +533,22 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	public void performAction(int action, int value)
 	{
-		if (action == CheckedGameAction.NOTHING)
+		if (action == CheckedAction.NOTHING)
 		{
 			//do nothing
 		}
-		else if (action == CheckedGameAction.PLAYGAME)
+		else if (action == CheckedAction.PLAYGAME_SINGLE)
 		{
-			game.InitGame();  //reset game
-			gameScreen = CheckedGameScreen.GAME;  //change to game screen.
-			currentScreen = null; //will eventually be a screen for game as well;
+			game.InitGame(CheckedGame.ONEPLAYER);  //reset game
+			currentScreen = CheckedScreen.GAME;  //change to game screen.
+			
 		}
-		else if (action == CheckedGameAction.ENDGAME)
+		else if (action == CheckedAction.ENDGAME)
 		{
-			gameScreen = CheckedGameScreen.END;
-			currentScreen = endScreen;
+			currentScreen = CheckedScreen.END;
+			
 		}
-		else if (action == CheckedGameAction.EXIT)
+		else if (action == CheckedAction.EXIT)
 		{
 			shutdown();
 		}
@@ -576,35 +570,8 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		boolean overClickable = false;
 		
-		if (gameScreen == CheckedGameScreen.MAIN)
-		{
-			//go through all buttons to see if its inside one
-			for (int i = 0;i<mainScreen.numButtons();i++)
-			{
-				CheckedGameButton curButton = mainScreen.getButton(i);
-								
-				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY) ))
-				{
-					overClickable = true;
-				}
-				
-			}
-		}
-		else if (gameScreen == CheckedGameScreen.END)
-		{
-			//go through all buttons to see if its inside one
-			for (int i = 0;i<endScreen.numButtons();i++)
-			{
-				CheckedGameButton curButton = endScreen.getButton(i);
-								
-				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
-				{
-					overClickable = true;
-				}
-				
-			}
-		}
-		else if (gameScreen == CheckedGameScreen.GAME)
+		//if playing game check for over moveable piece.
+		if (currentScreen == CheckedScreen.GAME)
 		{		
 			//do mouse position stuff for game...maybe create function inside CheckedGame?  
 			
@@ -619,7 +586,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				{
 					for (int i = 0;i<tempBoard.getNumGamePieces();i++)
 					{
-						CheckedGamePiece curPiece = tempBoard.getPiece(i);
+						CheckedPiece curPiece = tempBoard.getPiece(i);
 						boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 						
 						if (isInsidePiece && game.CanPieceMove(curPiece))
@@ -635,7 +602,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				}
 				else if (game.GetGameState() == CheckedGameStates.MULTIJUMP)
 				{
-					CheckedGamePiece curPiece = tempBoard.getPiece(game.getGameBoard().getSelectedPiece());
+					CheckedPiece curPiece = tempBoard.getPiece(game.getGameBoard().getSelectedPiece());
 					boolean isInsidePiece = curPiece.PointInside( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 					
 					if (isInsidePiece && game.CanPieceMove(curPiece))
@@ -648,6 +615,22 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 						curPiece.SetHighlighted(false);
 					}					
 				}	
+			}
+		}
+		
+		//then check for over a button
+		if (gameScreens[currentScreen] !=null)
+		{
+			//go through all buttons to see if its inside one
+			for (int i = 0;i<gameScreens[currentScreen].numButtons();i++)
+			{
+				CheckedButton curButton = gameScreens[currentScreen].getButton(i);
+								
+				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
+				{
+					overClickable = true;
+				}
+				
 			}
 		}
 		
@@ -668,13 +651,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		
 		//currently doesn't care which mouse button;
 		
-		if (gameScreen == CheckedGameScreen.MAIN)
+		if (gameScreens[currentScreen]!=null)
 		{
-			//go through each button and find out if it was clicked on.
-			int numButtons = mainScreen.numButtons();
+			int numButtons = gameScreens[currentScreen].numButtons();
 			for (int i = 0;i<numButtons;i++)
 			{
-				CheckedGameButton curButton = mainScreen.getButton(i);
+				CheckedButton curButton = gameScreens[currentScreen].getButton(i);
 				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
 				{
 					performAction(curButton.getAction(),0);
@@ -682,25 +664,12 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				}
 			}
 		}
-		else if (gameScreen == CheckedGameScreen.END)
-		{
-			//go through each button and find out if it was clicked on.
-			int numButtons = endScreen.numButtons();
-			for (int i = 0;i<numButtons;i++)
-			{
-				CheckedGameButton curButton = endScreen.getButton(i);
-				if (curButton.pointInside(unscaleAndOffsetX(mouseX), unscaleAndOffsetY(mouseY)))
-				{
-					performAction(curButton.getAction(),0);
-					break;  //only do one action...just in case overlapping buttons.
-				}
-			}
-		}
+		
 	}
 	
 	public void MousePress(int mouseX, int mouseY)
 	{
-		if (gameScreen == CheckedGameScreen.GAME)
+		if (currentScreen == CheckedScreen.GAME)
 		{		
 			game.GameMousePress( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY) );
 		}
@@ -708,7 +677,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	public void MouseDragged(int mouseX, int mouseY)
 	{	
-		if(gameScreen==CheckedGameScreen.GAME)
+		if(currentScreen==CheckedScreen.GAME)
 		{
 			if(game.GetGameState() == CheckedGameStates.MOVING)
 			{			
@@ -719,7 +688,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 	
 	public void MouseRelease(int mouseX,int mouseY)
 	{
-		if (gameScreen == CheckedGameScreen.GAME)
+		if (currentScreen == CheckedScreen.GAME)
 		{
 			int result = game.GameMouseRelease( ConvertCoordsPanel2BoardX(mouseX), ConvertCoordsPanel2BoardY(mouseY));
 			
@@ -789,7 +758,7 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 		offsetX = (int) ( currentBoardDims.getWidth()-(defaultBoardDims.getWidth()*scaleFactor) )/2;
 		offsetY = (int) ( currentBoardDims.getHeight()-(defaultBoardDims.getHeight()*scaleFactor) )/2;
 		
-		if (gameScreen == CheckedGameScreen.GAME)
+		if (currentScreen == CheckedScreen.GAME)
 		{
 			int result = game.UpdateGame();
 			
@@ -798,9 +767,9 @@ public class CheckedGameBoardPanel extends JPanel implements MouseListener, Mous
 				performAction(CheckedGameAction.ENDGAME);					
 				//resultAction = CheckedGameAction.ENDGAME;
 			}*/
-			if (result == CheckedGameAction.ENDGAME)
+			if (result == CheckedAction.ENDGAME)
 			{
-				performAction(CheckedGameAction.ENDGAME,0);
+				performAction(CheckedAction.ENDGAME,0);
 			}
 		
 			//seems weird to check this every frame.

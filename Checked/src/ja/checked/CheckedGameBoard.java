@@ -5,8 +5,8 @@ import java.util.ArrayList;
 public class CheckedGameBoard 
 {
 	private int playerTurn;  //whose turn is it 0 or 1;
-	private ArrayList<CheckedGamePiece> gamePieces = new ArrayList<CheckedGamePiece>();
-	private ArrayList<CheckedGamePiece> capturedPieces = new ArrayList<CheckedGamePiece>();
+	private ArrayList<CheckedPiece> gamePieces = new ArrayList<CheckedPiece>();
+	private ArrayList<CheckedPiece> capturedPieces = new ArrayList<CheckedPiece>();
 	
 	private int selectedPiece;  //used for mouse dragging and jumping
 	CheckedMove currentMove;  //stores what the current move is during move animations
@@ -43,21 +43,21 @@ public class CheckedGameBoard
 		for (int i = 0; i< sourceBoard.getNumGamePieces();i++)
 		{
 			//make a copy of each piece
-			CheckedGamePiece curPiece = sourceBoard.getPiece(i);
-			CheckedGamePiece copyPiece = null;
+			CheckedPiece curPiece = sourceBoard.getPiece(i);
+			CheckedPiece copyPiece = null;
 			
 			//first find what type it is and then create a copy 
-			if (curPiece instanceof CheckedGamePieceManPlayer0 )
+			if (curPiece instanceof CheckedPieceManPlayer0 )
 			{
-				copyPiece = new CheckedGamePieceManPlayer0(curPiece);
+				copyPiece = new CheckedPieceManPlayer0(curPiece);
 			}
-			else if (curPiece instanceof CheckedGamePieceManPlayer1 )
+			else if (curPiece instanceof CheckedPieceManPlayer1 )
 			{
-				copyPiece = new CheckedGamePieceManPlayer1(curPiece);
+				copyPiece = new CheckedPieceManPlayer1(curPiece);
 			}
-			else if (curPiece instanceof CheckedGamePieceKing )
+			else if (curPiece instanceof CheckedPieceKing )
 			{
-				copyPiece = new CheckedGamePieceKing(curPiece);
+				copyPiece = new CheckedPieceKing(curPiece);
 			}
 			else
 			{
@@ -150,37 +150,37 @@ public class CheckedGameBoard
 		gamePieces.clear();
 		
 		//player 1's pieces
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,1,0));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,3,0));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,5,0));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,7,0));
+		gamePieces.add(new CheckedPieceManPlayer0(0,1,0));
+		gamePieces.add(new CheckedPieceManPlayer0(0,3,0));
+		gamePieces.add(new CheckedPieceManPlayer0(0,5,0));
+		gamePieces.add(new CheckedPieceManPlayer0(0,7,0));
 		
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,0,1));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,2,1));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,4,1));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,6,1));
+		gamePieces.add(new CheckedPieceManPlayer0(0,0,1));
+		gamePieces.add(new CheckedPieceManPlayer0(0,2,1));
+		gamePieces.add(new CheckedPieceManPlayer0(0,4,1));
+		gamePieces.add(new CheckedPieceManPlayer0(0,6,1));
 		
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,1,2));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,3,2));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,5,2));
-		gamePieces.add(new CheckedGamePieceManPlayer0(0,7,2));
+		gamePieces.add(new CheckedPieceManPlayer0(0,1,2));
+		gamePieces.add(new CheckedPieceManPlayer0(0,3,2));
+		gamePieces.add(new CheckedPieceManPlayer0(0,5,2));
+		gamePieces.add(new CheckedPieceManPlayer0(0,7,2));
 		
 		
 		//player 2's pieces
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,0,5));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,2,5));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,4,5));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,6,5));
+		gamePieces.add(new CheckedPieceManPlayer1(1,0,5));
+		gamePieces.add(new CheckedPieceManPlayer1(1,2,5));
+		gamePieces.add(new CheckedPieceManPlayer1(1,4,5));
+		gamePieces.add(new CheckedPieceManPlayer1(1,6,5));
 				
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,1,6));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,3,6));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,5,6));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,7,6));
+		gamePieces.add(new CheckedPieceManPlayer1(1,1,6));
+		gamePieces.add(new CheckedPieceManPlayer1(1,3,6));
+		gamePieces.add(new CheckedPieceManPlayer1(1,5,6));
+		gamePieces.add(new CheckedPieceManPlayer1(1,7,6));
 				
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,0,7));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,2,7));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,4,7));
-		gamePieces.add(new CheckedGamePieceManPlayer1(1,6,7));
+		gamePieces.add(new CheckedPieceManPlayer1(1,0,7));
+		gamePieces.add(new CheckedPieceManPlayer1(1,2,7));
+		gamePieces.add(new CheckedPieceManPlayer1(1,4,7));
+		gamePieces.add(new CheckedPieceManPlayer1(1,6,7));
 		
 		//test config
 		/*gamePieces.add(new CheckedGamePieceManPlayer0(0,3,0));
@@ -190,7 +190,7 @@ public class CheckedGameBoard
 	}
 	
 	
-	public CheckedGamePiece getPiece(int spaceNum)
+	public CheckedPiece getPiece(int spaceNum)
 	{
 		return gamePieces.get(spaceNum);
 	}
@@ -217,7 +217,7 @@ public class CheckedGameBoard
 		
 		for (int i = 0; i<gamePieces.size();i++)
 		{
-			CheckedGamePiece curPiece = gamePieces.get(i);
+			CheckedPiece curPiece = gamePieces.get(i);
 			if ( curPiece.GetSpaceX() == spaceX && curPiece.GetSpaceY() == spaceY)
 			{
 				isOccupied = curPiece.GetOwner();
@@ -240,7 +240,7 @@ public class CheckedGameBoard
 		
 		for (int i = 0; i<numPieces;i++)
 		{
-			CheckedGamePiece curPiece = getPiece(i);
+			CheckedPiece curPiece = getPiece(i);
 			
 			if (curPiece.GetOwner() == playerNum && CanPieceJump(curPiece))
 			{
@@ -258,7 +258,7 @@ public class CheckedGameBoard
 		
 		for (int i = 0; i<numPieces;i++)
 		{
-			CheckedGamePiece curPiece = getPiece(i);
+			CheckedPiece curPiece = getPiece(i);
 			
 			if (curPiece.GetOwner() == playerNum)
 			{
@@ -274,7 +274,7 @@ public class CheckedGameBoard
 		return false;
 	}
 	
-	public boolean CanPieceJump(CheckedGamePiece gamePiece)  //similar to findjumps...but aborts as soon as one is found
+	public boolean CanPieceJump(CheckedPiece gamePiece)  //similar to findjumps...but aborts as soon as one is found
 	{
 		//TODO there is a problem with the code here.
 		//During multijumps should only return jumps for selected Piece.
@@ -309,7 +309,7 @@ public class CheckedGameBoard
 		return false;
 	}
 	
-	public boolean CanPieceMove(CheckedGamePiece inPiece)  //similar to allowed moves...except aborts as soon as it finds something...more efficient
+	public boolean CanPieceMove(CheckedPiece inPiece)  //similar to allowed moves...except aborts as soon as it finds something...more efficient
 	{
 		ArrayList<CheckedMove> allowedMoves = new ArrayList<CheckedMove>(); //create empty arraylist...this will be returned...this is absolute board positions the piece can move to.
 		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(inPiece.GetMoves());  //get possible moves from piece...this is relative 
@@ -331,7 +331,7 @@ public class CheckedGameBoard
 		return false;
 	}
 	
-	public ArrayList<CheckedMove> FindJumps(CheckedGamePiece gamePiece)
+	public ArrayList<CheckedMove> FindJumps(CheckedPiece gamePiece)
 	{
 		ArrayList<CheckedMove> foundMoves = new ArrayList<CheckedMove>();  //allowed jumps in board coords.
 		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(gamePiece.GetMoves());  //get possible moves from piece...this is relative 
@@ -363,7 +363,7 @@ public class CheckedGameBoard
 	}
 	
 	//takes the piece and using its move list compares it to the board to find all places that piece can go.
-	public ArrayList<CheckedMove> AllowedMoves(CheckedGamePiece inPiece)
+	public ArrayList<CheckedMove> AllowedMoves(CheckedPiece inPiece)
 	{
 		ArrayList<CheckedMove> allowedMoves = new ArrayList<CheckedMove>(); //create empty arraylist...this will be returned...this is absolute board positions the piece can move to.
 		ArrayList<CheckedMove> possibleMoves = new ArrayList<CheckedMove>(inPiece.GetMoves());  //get possible moves from piece...this is relative 
@@ -391,7 +391,7 @@ public class CheckedGameBoard
 		return allowedMoves;
 	}
 		
-	public boolean IsMoveValid(CheckedGamePiece inPiece, CheckedMove inMove)
+	public boolean IsMoveValid(CheckedPiece inPiece, CheckedMove inMove)
 	{
 		boolean isValid = false;
 			
@@ -419,7 +419,7 @@ public class CheckedGameBoard
 	{
 		//int result;  //what is passed back...need constants
 		
-		CheckedGamePiece curPiece = gamePieces.get(move.getPiece());
+		CheckedPiece curPiece = gamePieces.get(move.getPiece());
 		setSelectedPiece(move.getPiece());
 		
 		//curPiece.setCurPos(oldX, oldY);
@@ -434,7 +434,7 @@ public class CheckedGameBoard
 	{
 		int result;
 		
-		CheckedGamePiece curPiece = gamePieces.get(currentMove.getPiece());
+		CheckedPiece curPiece = gamePieces.get(currentMove.getPiece());
 		
 		curPiece.SetMoving(false);
 		curPiece.setCurPos(currentMove.getMoveX(), currentMove.getMoveY());
@@ -446,14 +446,14 @@ public class CheckedGameBoard
 		
 		//check for kinging
 		boolean kinged = false;
-		if (!(curPiece instanceof CheckedGamePieceKing)) //don't king more than once.
+		if (!(curPiece instanceof CheckedPieceKing)) //don't king more than once.
 		{
-			if (currentMove.getMoveY() == 7  && curPiece instanceof CheckedGamePieceManPlayer0)  
+			if (currentMove.getMoveY() == 7  && curPiece instanceof CheckedPieceManPlayer0)  
 			{
 				KingPiece(currentMove.getPiece());
 				kinged = true;
 			}		
-			else if (currentMove.getMoveY() == 0  && curPiece instanceof CheckedGamePieceManPlayer1)  
+			else if (currentMove.getMoveY() == 0  && curPiece instanceof CheckedPieceManPlayer1)  
 			{
 				KingPiece(currentMove.getPiece());
 				kinged = true;
@@ -508,7 +508,7 @@ public class CheckedGameBoard
 			
 		for (int i = 0; i<numPieces; i++)
 		{
-			CheckedGamePiece curPiece = getPiece(i);
+			CheckedPiece curPiece = getPiece(i);
 			if (curPiece.GetSpaceX() == spaceX && curPiece.GetSpaceY() == spaceY)
 			{
 				CapturePiece(i);
@@ -537,8 +537,8 @@ public class CheckedGameBoard
 	public void KingPiece(int inPiece)
 	{
 		//change this peice to a King piece.
-		CheckedGamePiece currentPiece = gamePieces.get(inPiece);
-		gamePieces.set(inPiece, new CheckedGamePieceKing(currentPiece.GetOwner(), currentPiece.GetSpaceX(), currentPiece.GetSpaceY()));
+		CheckedPiece currentPiece = gamePieces.get(inPiece);
+		gamePieces.set(inPiece, new CheckedPieceKing(currentPiece.GetOwner(), currentPiece.GetSpaceX(), currentPiece.GetSpaceY()));
 	}
 	
 	public boolean gameOver()  //return -1 if not game over.  0 if player1 won, 1 if player2.
@@ -550,7 +550,7 @@ public class CheckedGameBoard
 		
 		for (int i = 0;i<getNumGamePieces();i++)
 		{
-			CheckedGamePiece curPiece = getPiece(i);
+			CheckedPiece curPiece = getPiece(i);
 			if (curPiece.GetOwner()==0)
 				found0 = true;
 			

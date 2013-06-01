@@ -5,14 +5,14 @@ import java.util.Random;
 
 import javax.swing.JFrame;
 
-public class CheckedGameGUI extends JFrame
+public class CheckedGUI extends JFrame
 {
 	//private int spaceSize = 64;  //not currently used...but may be needed again.
 		
 	private static final long serialVersionUID = 1L;
 
 
-	public CheckedGameGUI()
+	public CheckedGUI()
 	{
 		setTitle("Checked");		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -34,7 +34,7 @@ public class CheckedGameGUI extends JFrame
 	
 	public static void main(String args[])
 	{
-		CheckedGameGUI gameWindow = new CheckedGameGUI();
+		CheckedGUI gameWindow = new CheckedGUI();
 		gameWindow.setVisible(true);
 		
 		

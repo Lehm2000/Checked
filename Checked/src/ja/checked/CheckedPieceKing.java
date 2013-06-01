@@ -2,9 +2,9 @@ package ja.checked;
 
 import java.util.ArrayList;
 
-public class CheckedGamePieceKing extends CheckedGamePiece{
+public class CheckedPieceKing extends CheckedPiece{
 	
-	public CheckedGamePieceKing(int owner, int x, int y) 
+	public CheckedPieceKing(int owner, int x, int y) 
 	{
 		super(owner,x,y);
 		moveList.add(new CheckedMove(-1,-1));
@@ -13,7 +13,7 @@ public class CheckedGamePieceKing extends CheckedGamePiece{
 		moveList.add(new CheckedMove(1,1));
 	}
 
-	public CheckedGamePieceKing(CheckedGamePiece sourcePiece) 
+	public CheckedPieceKing(CheckedPiece sourcePiece) 
 	{
 		super(sourcePiece.GetOwner(),sourcePiece.GetSpaceX(),sourcePiece.GetSpaceY());
 		

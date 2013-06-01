@@ -11,9 +11,9 @@ public class CheckedPlayerHuman extends CheckedPlayer {
 		
 	}
 	
-	CheckedPlayerHuman(Color color, int playerNum)
+	CheckedPlayerHuman(Color color, int playerNum, String name)
 	{
-		super(color,playerNum);
+		super(color,playerNum,name);
 		setAI(false);
 		setChoosenMove(null);
 	}
